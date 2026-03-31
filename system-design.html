@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Intelligence System — System Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --blue: #3b82f6;
+    --blue-light: #eff6ff;
+    --green: #10b981;
+    --green-light: #ecfdf5;
+    --purple: #8b5cf6;
+    --purple-light: #f5f3ff;
+    --orange: #f59e0b;
+    --orange-light: #fffbeb;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+  nav ul {
+    display: flex; gap: 4px; list-style: none;
+    max-width: 1100px; margin: 0 auto; padding: 10px 0;
+    overflow-x: auto; white-space: nowrap;
+  }
+  nav a {
+    text-decoration: none; color: var(--muted);
+    font-size: 13px; font-weight: 500;
+    padding: 5px 10px; border-radius: 6px;
+    transition: all .15s;
+  }
+  nav a:hover { color: var(--blue); background: var(--blue-light); }
+
+  /* ── LAYOUT ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+  section { padding-top: 60px; }
+
+  h2 {
+    font-size: 22px; font-weight: 700;
+    margin-bottom: 6px; color: var(--text);
+  }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e1b4b 100%);
+    color: white; padding: 72px 24px 64px; text-align: center;
+  }
+  .hero-inner { max-width: 780px; margin: 0 auto; }
+  .hero h1 { font-size: 42px; font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
+  .hero h1 span { color: #60a5fa; }
+  .hero p { font-size: 18px; color: #94a3b8; margin-bottom: 32px; line-height: 1.6; }
+
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .badge {
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.08);
+    color: #e2e8f0;
+  }
+  .badge.active { background: rgba(16,185,129,.2); border-color: rgba(16,185,129,.4); color: #6ee7b7; }
+
+  .privacy-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3);
+    color: #6ee7b7; border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; font-weight: 600; margin-bottom: 20px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 16px; }
+
+  /* ── OVERVIEW ── */
+  .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .overview-grid { grid-template-columns: 1fr; } }
+
+  .overview-text p { margin-bottom: 14px; color: var(--text); }
+  .analogy-box {
+    background: var(--blue-light); border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--blue);
+    border-radius: 8px; padding: 16px;
+    font-style: italic; color: #1d4ed8;
+    margin: 16px 0;
+  }
+
+  .domain-table { width: 100%; border-collapse: collapse; }
+  .domain-table th {
+    text-align: left; padding: 10px 12px;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .domain-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .domain-table tr:last-child td { border-bottom: none; }
+  .status-active {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--green-light); color: #065f46;
+    border: 1px solid #a7f3d0; border-radius: 12px;
+    padding: 2px 8px; font-size: 12px; font-weight: 600;
+  }
+  .status-planned {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #fef9c3; color: #713f12;
+    border: 1px solid #fde68a; border-radius: 12px;
+    padding: 2px 8px; font-size: 12px; font-weight: 600;
+  }
+
+  /* ── BIG PICTURE DIAGRAM ── */
+  .diagram-wrap {
+    background: #0f172a; border-radius: 16px;
+    padding: 40px 32px; overflow-x: auto;
+  }
+
+  .diagram-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .diagram-row + .diagram-row { margin-top: 8px; }
+
+  .dbox {
+    border-radius: 10px; padding: 14px 18px;
+    min-width: 150px; text-align: center;
+    border: 1px solid transparent;
+  }
+  .dbox-title { font-size: 13px; font-weight: 700; color: white; margin-bottom: 4px; }
+  .dbox-desc { font-size: 11px; color: rgba(255,255,255,.6); line-height: 1.4; }
+
+  .dbox-blue  { background: rgba(59,130,246,.25); border-color: rgba(59,130,246,.5); }
+  .dbox-green { background: rgba(16,185,129,.2);  border-color: rgba(16,185,129,.4); }
+  .dbox-purple{ background: rgba(139,92,246,.2);  border-color: rgba(139,92,246,.4); }
+  .dbox-orange{ background: rgba(245,158,11,.2);  border-color: rgba(245,158,11,.4); }
+  .dbox-red   { background: rgba(239,68,68,.2);   border-color: rgba(239,68,68,.4); }
+  .dbox-slate { background: rgba(100,116,139,.2); border-color: rgba(100,116,139,.4); }
+
+  .arrow-down {
+    text-align: center; color: rgba(255,255,255,.4);
+    font-size: 11px; padding: 4px 0;
+  }
+  .arrow-label {
+    display: inline-block;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 10px; padding: 2px 10px;
+    font-size: 11px; color: rgba(255,255,255,.5);
+  }
+
+  .diagram-section-label {
+    color: rgba(255,255,255,.3); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em;
+    text-align: center; padding: 12px 0 4px;
+  }
+
+  .diagram-divider {
+    border: none; border-top: 1px dashed rgba(255,255,255,.1);
+    margin: 16px 0;
+  }
+
+  .verticals-row {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  }
+  .vbox {
+    background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3);
+    border-radius: 8px; padding: 8px 14px; text-align: center;
+  }
+  .vbox-title { font-size: 12px; font-weight: 700; color: #6ee7b7; }
+  .vbox-desc  { font-size: 10px; color: rgba(255,255,255,.4); margin-top: 2px; }
+
+  .stub-row {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  }
+  .sbox {
+    background: rgba(100,116,139,.1); border: 1px dashed rgba(100,116,139,.4);
+    border-radius: 8px; padding: 8px 14px; text-align: center;
+  }
+  .sbox-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.4); }
+  .sbox-label { font-size: 10px; color: rgba(255,255,255,.2); }
+
+  .diagram-legend {
+    display: flex; gap: 16px; justify-content: center;
+    flex-wrap: wrap; padding-top: 24px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: rgba(255,255,255,.45);
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* ── DATA FLOW ── */
+  .flow-steps { display: flex; flex-direction: column; gap: 0; }
+  .flow-step {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .flow-step:last-child { border-bottom: none; }
+  .flow-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+    color: white;
+  }
+  .flow-num.blue   { background: var(--blue); }
+  .flow-num.green  { background: var(--green); }
+  .flow-num.purple { background: var(--purple); }
+  .flow-num.orange { background: var(--orange); }
+  .flow-body h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .flow-body p  { font-size: 14px; color: var(--muted); }
+  .flow-detail {
+    margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .flow-chip {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px;
+    font-size: 12px; font-weight: 500; color: var(--text);
+  }
+  .flow-chip.g { background: var(--green-light); border-color: #a7f3d0; color: #065f46; }
+  .flow-chip.p { background: var(--purple-light); border-color: #ddd6fe; color: #5b21b6; }
+  .flow-chip.b { background: var(--blue-light); border-color: #bfdbfe; color: #1e40af; }
+  .flow-chip.o { background: var(--orange-light); border-color: #fde68a; color: #78350f; }
+  .flow-chip.r { background: var(--red-light); border-color: #fecaca; color: #991b1b; }
+
+  /* ── COMPONENT CARDS ── */
+  .comp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .comp-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .comp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .comp-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .comp-name { font-size: 15px; font-weight: 700; }
+  .comp-job  { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .comp-analogy {
+    background: var(--bg); border-radius: 6px;
+    padding: 8px 12px; font-size: 12px;
+    color: var(--muted); font-style: italic; margin-bottom: 12px;
+  }
+  .comp-tech {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
+  }
+  .comp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 5px; padding: 3px 8px;
+    font-size: 11px; font-weight: 500;
+  }
+  .chip.in  { border-color: #bfdbfe; background: var(--blue-light); color: #1e40af; }
+  .chip.out { border-color: #a7f3d0; background: var(--green-light); color: #065f46; }
+
+  /* ── STORAGE TABLE ── */
+  .storage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .storage-grid { grid-template-columns: 1fr; } }
+
+  .storage-card {
+    border-radius: 12px; padding: 20px;
+    border: 1px solid transparent;
+  }
+  .storage-card.neo4j  { background: var(--purple-light); border-color: #ddd6fe; }
+  .storage-card.chroma { background: var(--blue-light);   border-color: #bfdbfe; }
+  .storage-card.local  { background: var(--green-light);  border-color: #a7f3d0; }
+
+  .storage-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .storage-card .plain { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .storage-items { list-style: none; }
+  .storage-items li {
+    padding: 6px 0; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,.05);
+    display: flex; justify-content: space-between;
+  }
+  .storage-items li:last-child { border-bottom: none; }
+  .storage-items .what { font-weight: 500; }
+  .storage-items .why  { color: var(--muted); font-size: 12px; }
+
+  /* ── SAFETY SECTION ── */
+  .safety-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) { .safety-grid { grid-template-columns: 1fr; } }
+
+  .safety-item {
+    border-radius: 10px; padding: 16px;
+    border: 1px solid transparent;
+  }
+  .safety-item h5 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .safety-item p  { font-size: 12px; color: var(--muted); }
+  .s-high   { background: var(--red-light);    border-color: #fecaca; }
+  .s-medium { background: var(--orange-light); border-color: #fde68a; }
+  .s-low    { background: var(--green-light);  border-color: #a7f3d0; }
+
+  /* ── DESIGN DECISIONS ── */
+  .decisions { display: flex; flex-direction: column; gap: 12px; }
+  .decision {
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 4px solid var(--blue);
+    border-radius: 8px; padding: 16px 20px;
+  }
+  .decision.green  { border-left-color: var(--green); }
+  .decision.purple { border-left-color: var(--purple); }
+  .decision.orange { border-left-color: var(--orange); }
+  .decision.red    { border-left-color: var(--red); }
+  .decision h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .decision p  { font-size: 13px; color: var(--muted); }
+  .decision strong { color: var(--text); }
+
+  /* ── GLOSSARY ── */
+  .glossary-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .gloss-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+  }
+  .gloss-term { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--blue); }
+  .gloss-def  { font-size: 13px; color: var(--muted); }
+
+  /* ── CROSS-DOMAIN QUERIES ── */
+  .query-cards { display: flex; flex-direction: column; gap: 12px; }
+  .query-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .query-q { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+  .query-q::before { content: '"'; color: var(--blue); }
+  .query-q::after  { content: '"'; color: var(--blue); }
+  .query-domains { display: flex; gap: 6px; flex-wrap: wrap; }
+  .qdomain {
+    font-size: 11px; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; border: 1px solid;
+  }
+  .qdomain.hc { background: var(--green-light); border-color: #a7f3d0; color: #065f46; }
+  .qdomain.fi { background: var(--blue-light);  border-color: #bfdbfe; color: #1e40af; }
+  .qdomain.le { background: var(--purple-light);border-color: #ddd6fe; color: #5b21b6; }
+
+  footer {
+    text-align: center; padding: 40px 24px;
+    color: var(--muted); font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#diagram">Architecture</a></li>
+    <li><a href="#dataflow">Data Flow</a></li>
+    <li><a href="#components">Components</a></li>
+    <li><a href="#storage">Storage</a></li>
+    <li><a href="#safety">Safety</a></li>
+    <li><a href="#cross-domain">Cross-Domain</a></li>
+    <li><a href="#decisions">Design Decisions</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="privacy-pill">🔒 100% Local — Your data never leaves your machine</div>
+    <h1>Life <span>Intelligence</span> System</h1>
+    <p>A private, locally-run knowledge graph that unifies your entire life — health records, finances, legal contracts, career history — so you can ask questions no single app could ever answer.</p>
+    <div class="badges">
+      <span class="badge active">✅ Healthcare — Active</span>
+      <span class="badge">🔜 Finances</span>
+      <span class="badge">🔜 Legal Contracts</span>
+      <span class="badge">🔜 Career</span>
+      <span class="badge">🔜 Relationships</span>
+      <span class="badge">Python 3.11</span>
+      <span class="badge">FastAPI</span>
+      <span class="badge">Neo4j</span>
+      <span class="badge">ChromaDB</span>
+      <span class="badge">Claude claude-sonnet-4-6</span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ── A. OVERVIEW ── -->
+  <section id="overview">
+    <div class="section-label">Section A</div>
+    <h2>What is this?</h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">
+
+      <div class="card overview-text">
+        <p>Your life is already full of data — lab results, prescription bottles, gym records, insurance policies, employment contracts — but it's all scattered across disconnected apps, filing cabinets, and PDF folders. <strong>This system reads all of it and builds a single connected map of your life.</strong></p>
+
+        <div class="analogy-box">
+          💡 Think of it like a brilliant personal assistant who has read every document you've ever owned, remembers every connection between them, and can instantly answer questions like: "Given my diabetes and my health insurance, am I maximizing my FSA savings account?" — a question no single app could answer alone.
+        </div>
+
+        <p>The system uses two types of search at the same time: <em>semantic search</em> (finds text that means the same thing even in different words) and <em>graph traversal</em> (follows the connections — this medication → treats this condition → covered by this insurance plan). The results are combined and handed to Claude, which writes a precise answer grounded entirely in your own data.</p>
+
+        <p>Everything runs on your laptop. Nothing is sent to the cloud except the question text and relevant excerpts you choose to ask about. Neo4j and ChromaDB run as local Docker containers. The API listens only on <code>127.0.0.1</code>.</p>
+      </div>
+
+      <div class="card">
+        <p class="section-label" style="margin-bottom:14px;">Current Domains</p>
+        <table class="domain-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Status</th>
+              <th>Verticals</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Healthcare</strong></td>
+              <td><span class="status-active">● Active</span></td>
+              <td>medical, fitness, mental health, genetics</td>
+            </tr>
+            <tr>
+              <td><strong>Finances</strong></td>
+              <td><span class="status-planned">🔜 Planned</span></td>
+              <td>banking, investments, insurance, taxes</td>
+            </tr>
+            <tr>
+              <td><strong>Legal Contracts</strong></td>
+              <td><span class="status-planned">🔜 Planned</span></td>
+              <td>employment, property, policies</td>
+            </tr>
+            <tr>
+              <td><strong>Career</strong></td>
+              <td><span class="status-planned">🔜 Planned</span></td>
+              <td>jobs, skills, education</td>
+            </tr>
+            <tr>
+              <td><strong>Relationships</strong></td>
+              <td><span class="status-planned">🔜 Planned</span></td>
+              <td>family history, professional</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:20px;padding:14px;background:var(--green-light);border:1px solid #a7f3d0;border-radius:8px;">
+          <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;">Healthcare Nodes (Seeded)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="chip">Condition</span><span class="chip">Medication</span><span class="chip">Supplement</span><span class="chip">LabResult</span><span class="chip">Vital</span><span class="chip">Allergy</span><span class="chip">Procedure</span><span class="chip">Vaccine</span><span class="chip">Hospitalization</span><span class="chip">Workout</span><span class="chip">Meal</span><span class="chip">BodyMetric</span><span class="chip">SleepRecord</span><span class="chip">MoodEntry</span><span class="chip">TherapySession</span><span class="chip">Stressor</span><span class="chip">Gene</span><span class="chip">GeneticRisk</span><span class="chip">Pharmacogene</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── B. BIG PICTURE DIAGRAM ── -->
+  <section id="diagram">
+    <div class="section-label">Section B</div>
+    <h2>The Big Picture</h2>
+    <p style="color:var(--muted);margin-bottom:20px;">Every piece of the system and how they connect — from your documents to your answer.</p>
+
+    <div class="diagram-wrap">
+
+      <!-- User row -->
+      <div class="diagram-section-label">You (the user)</div>
+      <div class="diagram-row">
+        <div class="dbox dbox-blue" style="min-width:220px;">
+          <div class="dbox-title">📋 Your Documents</div>
+          <div class="dbox-desc">Lab PDFs · prescription bottles · genetics reports · therapy notes · insurance policies</div>
+        </div>
+        <div style="color:rgba(255,255,255,.3);font-size:20px;">→</div>
+        <div class="dbox dbox-blue" style="min-width:180px;">
+          <div class="dbox-title">💬 Your Question</div>
+          <div class="dbox-desc">"What drugs interact with my supplements?" via CLI or API</div>
+        </div>
+      </div>
+
+      <div class="arrow-down">↓ <span class="arrow-label">ingest file / POST /query</span> ↓</div>
+
+      <!-- API row -->
+      <div class="diagram-section-label">API Layer · FastAPI · localhost:8000 only</div>
+      <div class="diagram-row">
+        <div class="dbox dbox-green" style="min-width:260px;">
+          <div class="dbox-title">⚡ FastAPI</div>
+          <div class="dbox-desc">Receives requests · routes to domain handler · assembles final answer · returns JSON</div>
+        </div>
+      </div>
+
+      <div class="arrow-down">↓ <span class="arrow-label">two parallel searches</span> ↓</div>
+
+      <!-- Retrieval row -->
+      <div class="diagram-section-label">Retrieval — finding relevant context</div>
+      <div class="diagram-row">
+        <div class="dbox dbox-green" style="min-width:200px;">
+          <div class="dbox-title">🕸️ Graph Retriever</div>
+          <div class="dbox-desc">Traverses Neo4j relationships — follows the connections between facts</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <span style="color:rgba(255,255,255,.2);font-size:11px;">fused 60%/40%</span>
+          <span style="color:rgba(255,255,255,.3);font-size:20px;">+</span>
+        </div>
+        <div class="dbox dbox-green" style="min-width:200px;">
+          <div class="dbox-title">🔍 Vector Retriever</div>
+          <div class="dbox-desc">Finds semantically similar text chunks in ChromaDB — even with different wording</div>
+        </div>
+        <div style="color:rgba(255,255,255,.3);font-size:20px;">→</div>
+        <div class="dbox dbox-green" style="min-width:180px;">
+          <div class="dbox-title">⚖️ Hybrid Fuser</div>
+          <div class="dbox-desc">Merges & re-ranks results. Boosts recent events. Eliminates duplicates.</div>
+        </div>
+      </div>
+
+      <hr class="diagram-divider">
+
+      <!-- Storage row -->
+      <div class="diagram-section-label">Storage — where your data lives</div>
+      <div class="diagram-row">
+        <div class="dbox dbox-purple" style="min-width:210px;">
+          <div class="dbox-title">🕸️ Neo4j Graph DB</div>
+          <div class="dbox-desc">22 node types · relationships between them · Cypher queries · port 7687</div>
+        </div>
+        <div style="color:rgba(255,255,255,.3);font-size:20px;"></div>
+        <div class="dbox dbox-purple" style="min-width:210px;">
+          <div class="dbox-title">📦 ChromaDB</div>
+          <div class="dbox-desc">Vector embeddings of text chunks · partitioned by domain + vertical · port 8001</div>
+        </div>
+        <div style="color:rgba(255,255,255,.3);font-size:20px;"></div>
+        <div class="dbox dbox-slate" style="min-width:150px;">
+          <div class="dbox-title">📁 Local Files</div>
+          <div class="dbox-desc">data/uploads/ — original PDFs, JSONs, CSVs never leave disk</div>
+        </div>
+      </div>
+
+      <div class="arrow-down">↓ <span class="arrow-label">merged context + safety warnings</span> ↓</div>
+
+      <!-- Generation row -->
+      <div class="diagram-section-label">Answer Generation</div>
+      <div class="diagram-row">
+        <div class="dbox dbox-red" style="min-width:200px;">
+          <div class="dbox-title">🛡️ Safety Checker</div>
+          <div class="dbox-desc">Drug interactions · supplement conflicts · insurance gaps · overdue screenings</div>
+        </div>
+        <div style="color:rgba(255,255,255,.3);font-size:20px;">→</div>
+        <div class="dbox dbox-orange" style="min-width:220px;">
+          <div class="dbox-title">🤖 Claude claude-sonnet-4-6</div>
+          <div class="dbox-desc">Reads context from YOUR data only · writes precise answer · surfaces cross-domain insights</div>
+        </div>
+      </div>
+
+      <hr class="diagram-divider">
+
+      <!-- Domains row -->
+      <div class="diagram-section-label">Domain Layer — pluggable, self-contained verticals</div>
+
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
+        <!-- Healthcare — active -->
+        <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:14px 18px;min-width:200px;">
+          <div style="font-size:12px;font-weight:700;color:#6ee7b7;margin-bottom:8px;">✅ Healthcare</div>
+          <div class="verticals-row" style="flex-direction:column;gap:4px;">
+            <div class="vbox"><div class="vbox-title">🏥 Medical</div><div class="vbox-desc">conditions, meds, labs, vitals</div></div>
+            <div class="vbox"><div class="vbox-title">🏃 Fitness</div><div class="vbox-desc">workouts, sleep, supplements</div></div>
+            <div class="vbox"><div class="vbox-title">🧠 Mental Health</div><div class="vbox-desc">therapy, mood, stress</div></div>
+            <div class="vbox"><div class="vbox-title">🧬 Genetics</div><div class="vbox-desc">risks, pharmacogenes, ancestry</div></div>
+          </div>
+        </div>
+        <!-- Planned stubs -->
+        <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;">
+          <div class="sbox" style="min-width:140px;"><div class="sbox-title">💰 Finances</div><div class="sbox-label">🔜 planned</div></div>
+          <div class="sbox" style="min-width:140px;"><div class="sbox-title">⚖️ Legal</div><div class="sbox-label">🔜 planned</div></div>
+          <div class="sbox" style="min-width:140px;"><div class="sbox-title">💼 Career</div><div class="sbox-label">🔜 planned</div></div>
+          <div class="sbox" style="min-width:140px;"><div class="sbox-title">👥 Relationships</div><div class="sbox-label">🔜 planned</div></div>
+        </div>
+        <!-- Cross-domain linker -->
+        <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px 18px;min-width:180px;display:flex;align-items:center;">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#fcd34d;margin-bottom:8px;">🔗 Cross-Domain Linker</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;">
+              Auto-discovers edges<br>BETWEEN domains after<br>every ingestion
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared backbone -->
+      <div style="background:rgba(100,116,139,.1);border:1px dashed rgba(100,116,139,.3);border-radius:10px;padding:12px;margin-top:8px;text-align:center;">
+        <div style="font-size:11px;color:rgba(255,255,255,.3);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Shared Backbone (src/core/) — never domain-specific</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <span class="arrow-label">Person node</span>
+          <span class="arrow-label">Document node</span>
+          <span class="arrow-label">TimePoint</span>
+          <span class="arrow-label">Provider</span>
+          <span class="arrow-label">Organisation</span>
+          <span class="arrow-label">Neo4j schema</span>
+          <span class="arrow-label">Doc loader</span>
+          <span class="arrow-label">Chunker</span>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="diagram-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>User-facing</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>Processing</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;"></div>Storage</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>External AI</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>Safety</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#64748b;"></div>Stub / Planned</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── C. DATA FLOW ── -->
+  <section id="dataflow">
+    <div class="section-label">Section C</div>
+    <h2>What happens when you ask a question?</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">A step-by-step story — from your question to your answer.</p>
+
+    <div class="card">
+      <div class="flow-steps">
+
+        <div class="flow-step">
+          <div class="flow-num blue">1</div>
+          <div class="flow-body">
+            <h4>📝 You ask a question</h4>
+            <p>You type your question in the CLI or call <code>POST /query</code>. Example: <em>"What medications am I on and do any interact with my supplements?"</em></p>
+            <div class="flow-detail">
+              <span class="flow-chip b">CLI: python scripts/query.py</span>
+              <span class="flow-chip b">API: POST /query</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num green">2</div>
+          <div class="flow-body">
+            <h4>🔍 Two searches fire in parallel</h4>
+            <p>The <strong>Graph Retriever</strong> runs Cypher queries against Neo4j — traversing relationships like "Person → TAKES_MEDICATION → Medication → INTERACTS_WITH → Supplement". The <strong>Vector Retriever</strong> converts your question into a list of numbers (an embedding) and finds the most similar text chunks stored in ChromaDB.</p>
+            <div class="flow-detail">
+              <span class="flow-chip g">Graph: Cypher traversal in Neo4j</span>
+              <span class="flow-chip p">Vector: Semantic similarity in ChromaDB</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num green">3</div>
+          <div class="flow-body">
+            <h4>⚖️ Results are fused and ranked</h4>
+            <p>The Hybrid Retriever merges both result sets. Graph results get 60% of the weight, vector results 40%. Recent events (last 5 years) get a small recency boost. Duplicates are removed. The top K results become the "context" for the AI.</p>
+            <div class="flow-detail">
+              <span class="flow-chip g">Graph weight: 60%</span>
+              <span class="flow-chip p">Vector weight: 40%</span>
+              <span class="flow-chip b">Recency boost: up to +15%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num orange">4</div>
+          <div class="flow-body">
+            <h4>🛡️ Safety checks run automatically</h4>
+            <p>Before generating the answer, the Safety Checker scans for: known drug-drug interactions (e.g. Sertraline + Escitalopram — serotonin syndrome risk), supplement-drug conflicts (e.g. Berberine + Metformin — hypoglycemia risk), insurance gaps, and overdue genetic screenings. High-severity warnings are prepended to the AI's context.</p>
+            <div class="flow-detail">
+              <span class="flow-chip r">HIGH: Drug interactions</span>
+              <span class="flow-chip o">MEDIUM: Supplement conflicts</span>
+              <span class="flow-chip">LOW: Insurance gaps</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num orange">5</div>
+          <div class="flow-body">
+            <h4>🔗 Cross-domain links are surfaced</h4>
+            <p>The Cross-Domain Linker checks whether any connections exist across domains — for example, an insurance plan (finances) that covers a condition (healthcare), or an employment contract benefit (legal) that funds medication costs. These are included as context for the AI.</p>
+            <div class="flow-detail">
+              <span class="flow-chip o">InsurancePlan ↔ Condition</span>
+              <span class="flow-chip o">Contract ↔ Benefit</span>
+              <span class="flow-chip o">Expense ↔ Procedure</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num purple">6</div>
+          <div class="flow-body">
+            <h4>🤖 Claude reads your data and writes the answer</h4>
+            <p>Claude claude-sonnet-4-6 receives: your question + retrieved context from your personal records + any safety warnings. It is instructed to only use the provided context (no hallucination), cite specific values (dates, dosages, test results), and lead with safety warnings if any exist.</p>
+            <div class="flow-detail">
+              <span class="flow-chip p">Model: claude-sonnet-4-6</span>
+              <span class="flow-chip p">Max context: ~6,000 chars of your data</span>
+              <span class="flow-chip p">Grounded: no hallucination outside context</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num blue">7</div>
+          <div class="flow-body">
+            <h4>✅ You get a structured answer</h4>
+            <p>The response includes: the answer text, key facts as bullet points, cross-domain insights discovered, safety warnings sorted by severity, source files cited, and a confidence level (high if lots of context found, medium if sparse).</p>
+            <div class="flow-detail">
+              <span class="flow-chip b">answer</span>
+              <span class="flow-chip b">key_facts[ ]</span>
+              <span class="flow-chip b">cross_domain_insights[ ]</span>
+              <span class="flow-chip r">warnings[ ]</span>
+              <span class="flow-chip b">sources[ ]</span>
+              <span class="flow-chip b">confidence</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── D. COMPONENTS ── -->
+  <section id="components">
+    <div class="section-label">Section D</div>
+    <h2>The Pieces — Component Cards</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Every major module and what it does in plain English.</p>
+
+    <div class="comp-grid">
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--purple-light);">🕸️</div>
+          <div class="comp-name">Neo4j Client</div>
+        </div>
+        <div class="comp-job">Manages the connection to the graph database. Initializes the backbone schema (constraints, indexes) and provides a single way for all domains to read/write graph data.</div>
+        <div class="comp-analogy">Like the master key that opens every room in the building — one secure connection shared by all.</div>
+        <div class="comp-tech">Tech: neo4j Python driver · Cypher</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: Cypher query + params</span>
+          <span class="chip out">OUT: list of record dicts</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--blue-light);">📄</div>
+          <div class="comp-name">Document Loader</div>
+        </div>
+        <div class="comp-job">Reads any personal document — PDF, Word, CSV, JSON, image (via OCR), XML — and returns clean text plus metadata.</div>
+        <div class="comp-analogy">Like a universal translator for documents — whether it's a scanned lab slip or a spreadsheet, it reads it.</div>
+        <div class="comp-tech">Tech: pdfplumber · python-docx · pytesseract · pandas</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: file path</span>
+          <span class="chip out">OUT: {text, metadata, dates_detected}</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--green-light);">✂️</div>
+          <div class="comp-name">Smart Chunker</div>
+        </div>
+        <div class="comp-job">Splits long documents into 800-character pieces that respect sentence boundaries. Detects and attaches the most prominent date from each chunk.</div>
+        <div class="comp-analogy">Like a careful editor who cuts a book into pages — never mid-sentence — and writes the date of each event on its page.</div>
+        <div class="comp-tech">Tech: regex · sentence boundary detection</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: text + metadata</span>
+          <span class="chip out">OUT: [{text, chunk_date, domain, vertical}]</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--purple-light);">📦</div>
+          <div class="comp-name">Vector Store</div>
+        </div>
+        <div class="comp-job">Stores text chunks as numerical vectors (embeddings) in ChromaDB, partitioned by domain and vertical. Enables semantic search — finding relevant text even if you use different words.</div>
+        <div class="comp-analogy">Like a filing cabinet where documents are sorted not alphabetically, but by meaning — so "heart attack" and "myocardial infarction" end up in the same drawer.</div>
+        <div class="comp-tech">Tech: ChromaDB · sentence-transformers (local)</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: query text + domain filter</span>
+          <span class="chip out">OUT: [{text, score, metadata}]</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--orange-light);">🧬</div>
+          <div class="comp-name">Medical Extractor</div>
+        </div>
+        <div class="comp-job">Reads a medical document (lab report, prescription, discharge summary) and asks Claude to extract structured data: conditions, medications, lab results, allergies, vaccines, providers — all as typed JSON.</div>
+        <div class="comp-analogy">Like a trained medical clerk who reads any messy document and fills out a perfectly structured form.</div>
+        <div class="comp-tech">Tech: Claude claude-sonnet-4-6 · structured JSON prompting</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: raw document text</span>
+          <span class="chip out">OUT: {conditions, medications, labs, vitals…}</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--purple-light);">🔨</div>
+          <div class="comp-name">Graph Builder</div>
+        </div>
+        <div class="comp-job">Takes extracted entities and writes them into Neo4j as nodes and relationships. Uses MERGE (not INSERT) so re-ingesting the same document is always safe — no duplicates.</div>
+        <div class="comp-analogy">Like a meticulous cartographer who draws each new fact as a dot on a map, connecting it to related dots with labeled arrows — and never draws the same dot twice.</div>
+        <div class="comp-tech">Tech: Neo4j · Cypher MERGE</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: extracted entities dict</span>
+          <span class="chip out">OUT: doc_id (graph updated)</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--green-light);">⚖️</div>
+          <div class="comp-name">Hybrid Retriever</div>
+        </div>
+        <div class="comp-job">Runs graph search and vector search in parallel, then fuses the results. Graph results get 60% weight (more precise), vector results 40% (broader coverage). Recent events get a small score boost.</div>
+        <div class="comp-analogy">Like two detectives working the same case and then comparing notes — one searched the filing cabinets (graph), one searched the documents (vector), together they find more than either alone.</div>
+        <div class="comp-tech">Tech: GraphRetriever + VectorRetriever · score fusion</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: question + domain filters</span>
+          <span class="chip out">OUT: {merged_results, total_context}</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--red-light);">🛡️</div>
+          <div class="comp-name">Safety Checker</div>
+        </div>
+        <div class="comp-job">Automatically flags dangerous combinations: drug-drug interactions (e.g. Sertraline + Escitalopram → serotonin syndrome), supplement conflicts (Berberine + Metformin → hypoglycemia), insurance gaps for active conditions, and overdue genetic screenings.</div>
+        <div class="comp-analogy">Like a pharmacist who checks every bottle against every other bottle before you leave the counter — whether you asked or not.</div>
+        <div class="comp-tech">Tech: Neo4j Cypher · hardcoded interaction rules</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: (reads live graph)</span>
+          <span class="chip out">OUT: {high, medium, low warnings}</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--orange-light);">🔗</div>
+          <div class="comp-name">Cross-Domain Linker</div>
+        </div>
+        <div class="comp-job">After every ingestion, scans the graph for connections across domains and creates new edges: insurance plans covering conditions, contracts funding benefits, medical expenses linked to procedures. Uses MERGE — always idempotent.</div>
+        <div class="comp-analogy">Like a detective who, after reading a new case file, immediately checks if it connects to any other open case — and staples the files together if it does.</div>
+        <div class="comp-tech">Tech: Neo4j MERGE · rule-based matching</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: (reads full graph)</span>
+          <span class="chip out">OUT: {rule: links_created}</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--orange-light);">🤖</div>
+          <div class="comp-name">Answer Generator</div>
+        </div>
+        <div class="comp-job">Sends the retrieved context + safety warnings to Claude claude-sonnet-4-6 with a strict system prompt: answer only from the provided data, cite specific facts, lead with safety warnings, highlight cross-domain insights.</div>
+        <div class="comp-analogy">Like a brilliant doctor who will only tell you what the test results actually say — never guessing — and always leads with the most urgent finding.</div>
+        <div class="comp-tech">Tech: Anthropic SDK · claude-sonnet-4-6</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: question + context + warnings</span>
+          <span class="chip out">OUT: {answer, key_facts, confidence}</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--green-light);">🔗</div>
+          <div class="comp-name">Healthcare Cross-Vertical Linker</div>
+        </div>
+        <div class="comp-job">Specifically links nodes within the healthcare domain across its 4 verticals: workout → vital signs, sleep → mood, stressor → symptom, genetic risk → diagnosis, pharmacogene → current medication.</div>
+        <div class="comp-analogy">Like a doctor who reads all four of your health files at once and writes sticky notes connecting them: "your poor sleep (fitness) is affecting your mood (mental health) which spikes your blood pressure (medical)."</div>
+        <div class="comp-tech">Tech: Neo4j MERGE · 13 linking rules</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: (reads healthcare graph)</span>
+          <span class="chip out">OUT: cross-vertical edges</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--blue-light);">🕰️</div>
+          <div class="comp-name">Timeline Manager</div>
+        </div>
+        <div class="comp-job">Maintains a universal chronological timeline of events across all domains. Every document ingested creates a TimePoint node. You can query your life as a timeline filtered by domain and date range.</div>
+        <div class="comp-analogy">Like a personal diary that automatically writes itself — and you can ask "show me everything that happened in 2020" and it shows entries from every area of your life.</div>
+        <div class="comp-tech">Tech: Neo4j date type · TimePoint nodes</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: date_from, date_to, domains</span>
+          <span class="chip out">OUT: [{event, domain, date}]</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── E. STORAGE ── -->
+  <section id="storage">
+    <div class="section-label">Section E</div>
+    <h2>Data Storage — What gets saved where?</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Three places your data lives, each optimized for a different kind of question.</p>
+
+    <div class="storage-grid">
+
+      <div class="storage-card neo4j">
+        <h4>🕸️ Neo4j Graph Database</h4>
+        <div class="plain">"A web of sticky notes where each note is a fact, and every connection between them has a label — 'treats', 'interacts with', 'indicates', 'covers'."</div>
+        <ul class="storage-items">
+          <li><span class="what">Conditions, Medications, Symptoms</span><span class="why">linked by named relationships</span></li>
+          <li><span class="what">Lab results, Vitals, Procedures</span><span class="why">timestamped to TimePoint nodes</span></li>
+          <li><span class="what">Genetic risks, Pharmacogenes</span><span class="why">linked to conditions + medications</span></li>
+          <li><span class="what">Mood, Sleep, Workouts</span><span class="why">cross-linked to each other</span></li>
+          <li><span class="what">Drug-drug, supplement-drug edges</span><span class="why">safety-critical relationships</span></li>
+          <li><span class="what">Domain + Vertical registry nodes</span><span class="why">self-describing graph</span></li>
+        </ul>
+        <div style="margin-top:12px;font-size:12px;color:#5b21b6;">Port 7687 (Bolt) · 7474 (Browser) · Docker</div>
+      </div>
+
+      <div class="storage-card chroma">
+        <h4>📦 ChromaDB Vector Store</h4>
+        <div class="plain">"A library where books are filed by meaning, not by title — so documents about 'blood sugar' and 'glucose levels' end up on the same shelf."</div>
+        <ul class="storage-items">
+          <li><span class="what">Text chunks (800 chars each)</span><span class="why">for semantic search</span></li>
+          <li><span class="what">Embeddings (numbers = meaning)</span><span class="why">sentence-transformers (local)</span></li>
+          <li><span class="what">Chunk metadata</span><span class="why">domain, vertical, date, source file</span></li>
+          <li><span class="what">Separate collections per vertical</span><span class="why">healthcare_medical, healthcare_fitness…</span></li>
+        </ul>
+        <div style="margin-top:12px;font-size:12px;color:#1e40af;">Port 8001 · persistent local storage · Docker</div>
+      </div>
+
+      <div class="storage-card local" style="grid-column:span 2;">
+        <h4>📁 Local File System</h4>
+        <div class="plain">"Your original documents, untouched, in organized folders — they never move off your disk."</div>
+        <ul class="storage-items" style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+          <li><span class="what">data/uploads/healthcare/medical/</span><span class="why">PDFs, images, XML</span></li>
+          <li><span class="what">data/uploads/healthcare/fitness/</span><span class="why">CSVs, Apple Health exports</span></li>
+          <li><span class="what">data/uploads/healthcare/mental_health/</span><span class="why">therapy notes, journals</span></li>
+          <li><span class="what">data/uploads/healthcare/genetics/</span><span class="why">23andMe reports, PDFs</span></li>
+          <li><span class="what">data/backups/</span><span class="why">AES-256 encrypted archives</span></li>
+          <li><span class="what">data/neo4j/ + data/chroma_db/</span><span class="why">database files (gitignored)</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SAFETY ── -->
+  <section id="safety">
+    <div class="section-label">Section F</div>
+    <h2>Safety System — Automatic Warnings</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Every query runs a safety check before the AI answers. Warnings are injected into the AI's context so they always surface — even if you didn't ask.</p>
+
+    <div class="safety-grid">
+      <div class="safety-item s-high">
+        <h5>🔴 HIGH — Drug Interactions</h5>
+        <p>Flags medications that interact dangerously. Seeded example: <strong>Sertraline + Escitalopram</strong> → duplicate serotonin mechanism → serotonin syndrome risk.</p>
+      </div>
+      <div class="safety-item s-high">
+        <h5>🔴 HIGH — Supplement Conflicts</h5>
+        <p>Flags supplements that conflict with medications. Seeded example: <strong>Berberine + Metformin</strong> → both lower blood glucose → additive hypoglycemia risk.</p>
+      </div>
+      <div class="safety-item s-high">
+        <h5>🔴 HIGH — Pharmacogenomics</h5>
+        <p>Flags when your genetic metabolism type affects a current drug. Seeded: <strong>CYP2C19 poor metabolizer + Escitalopram</strong> → elevated plasma levels → dose review needed.</p>
+      </div>
+      <div class="safety-item s-medium">
+        <h5>🟡 MEDIUM — Insurance Gaps</h5>
+        <p>Flags active chronic conditions (e.g. Type 2 Diabetes) with no linked insurance plan coverage — surfaced once the finances domain is active.</p>
+      </div>
+      <div class="safety-item s-medium">
+        <h5>🟡 MEDIUM — Upcoming Obligations</h5>
+        <p>Flags contract obligations due in the next 30 days — surfaced once the legal-contracts domain is active.</p>
+      </div>
+      <div class="safety-item s-low">
+        <h5>🟢 LOW — Overdue Screenings</h5>
+        <p>Flags high genetic risks (e.g. BRCA2) with no recent related procedure in the past year. Prompts action before a problem develops.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CROSS-DOMAIN ── -->
+  <section id="cross-domain">
+    <div class="section-label">Section G</div>
+    <h2>Cross-Domain Magic — The Real Value</h2>
+    <p style="color:var(--muted);margin-bottom:8px;">These are the questions that make this system unique. No single-domain app can answer them.</p>
+    <p style="color:var(--muted);margin-bottom:24px;">The first three require the finances and legal domains (planned). The healthcare queries work today.</p>
+
+    <div class="query-cards">
+      <div class="query-card">
+        <div class="query-q">Given my diabetes diagnosis and my health insurance claims, am I maximizing my FSA/HSA benefits?</div>
+        <div class="query-domains">
+          <span class="qdomain hc">Healthcare: Type 2 Diabetes condition</span>
+          <span class="qdomain fi">Finances: InsurancePlan + Benefit(HSA)</span>
+          <span class="qdomain fi">Finances: Expense(is_medical)</span>
+        </div>
+      </div>
+      <div class="query-card">
+        <div class="query-q">Does my life insurance policy account for my BRCA2 screening needs?</div>
+        <div class="query-domains">
+          <span class="qdomain hc">Healthcare: GeneticRisk(BRCA2, high)</span>
+          <span class="qdomain fi">Finances: InsurancePlan(type:life)</span>
+        </div>
+      </div>
+      <div class="query-card">
+        <div class="query-q">What medical expenses can I claim given my employment contract benefits?</div>
+        <div class="query-domains">
+          <span class="qdomain le">Legal: Contract(employment) + Benefit(FSA)</span>
+          <span class="qdomain fi">Finances: Expense(is_medical)</span>
+          <span class="qdomain hc">Healthcare: Procedure + Medication</span>
+        </div>
+      </div>
+      <div class="query-card" style="background:var(--green-light);border-color:#a7f3d0;">
+        <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:6px;">✅ WORKS TODAY</div>
+        <div class="query-q">What medications am I on and do any interact with each other or my supplements?</div>
+        <div class="query-domains">
+          <span class="qdomain hc">Healthcare: Medication + INTERACTS_WITH + Supplement</span>
+        </div>
+      </div>
+      <div class="query-card" style="background:var(--green-light);border-color:#a7f3d0;">
+        <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:6px;">✅ WORKS TODAY</div>
+        <div class="query-q">Based on my BRCA2 variant, what screenings am I due for and have I had any recently?</div>
+        <div class="query-domains">
+          <span class="qdomain hc">Healthcare: GeneticRisk → Condition → Procedure (by date)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── DESIGN DECISIONS ── -->
+  <section id="decisions">
+    <div class="section-label">Section H</div>
+    <h2>Why was it built this way?</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Key architectural choices explained as cause-and-effect.</p>
+
+    <div class="decisions">
+
+      <div class="decision">
+        <h4>Graph database (Neo4j) instead of a regular database</h4>
+        <p>Medical knowledge is <strong>fundamentally a network</strong>: Drug A interacts with Drug B, which metabolized by Gene C, which increases Risk D, which is covered by Insurance Plan E. A regular database would need 5 JOINs to answer a single question. A graph database follows those connections in milliseconds, in any direction.</p>
+      </div>
+
+      <div class="decision green">
+        <h4>Umbrella architecture with pluggable domains</h4>
+        <p>Instead of one monolithic healthcare app, every life domain is <strong>self-contained and interchangeable</strong>. Adding finances later requires zero changes to the core — just a new <code>src/domains/finances/</code> folder extending <code>BaseDomain</code>. The backbone schema (Person, Document, TimePoint) never changes, no matter how many domains are added.</p>
+      </div>
+
+      <div class="decision purple">
+        <h4>Hybrid retrieval (graph 60% + vector 40%) instead of just one</h4>
+        <p>Graph search is <strong>precise but brittle</strong> — it finds exactly what matches the relationship, but misses paraphrases. Vector search is <strong>broad but imprecise</strong> — it finds semantically similar text, but loses structured facts. Combining them at a 60/40 ratio gives the precision of graph traversal with the coverage of semantic similarity.</p>
+      </div>
+
+      <div class="decision orange">
+        <h4>Claude extracts entities from documents (not hand-written parsers)</h4>
+        <p>Medical documents are <strong>wildly inconsistent</strong>: different hospitals format lab results differently, medications use brand or generic names interchangeably, dates appear in 10 different formats. Writing a regex parser for all of that would take months and break constantly. Claude can read any format and return clean structured JSON reliably.</p>
+      </div>
+
+      <div class="decision red">
+        <h4>Safety warnings are injected automatically — never optional</h4>
+        <p>Drug interactions are life-critical. <strong>A user asking "what's my HbA1c trend?" should still be told about the Sertraline + Escitalopram risk</strong> if it exists, even though they didn't ask about it. The Safety Checker runs on every query and prepends HIGH-severity warnings to the AI's context before it writes the answer.</p>
+      </div>
+
+      <div class="decision" style="border-left-color:#64748b;">
+        <h4>Everything runs locally — API bound to 127.0.0.1 only</h4>
+        <p>Personal health records, genetic data, and financial history are <strong>the most sensitive data a person owns</strong>. Neo4j and ChromaDB run as local Docker containers. The FastAPI server listens only on localhost — it cannot be reached from any other machine on the network. The only data that leaves the machine is the question text + excerpts sent to the Claude API.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── GLOSSARY ── -->
+  <section id="glossary">
+    <div class="section-label">Section I</div>
+    <h2>Glossary — Words You Might Not Know</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">Every technical term used in this project, explained in plain English.</p>
+
+    <div class="glossary-grid">
+      <div class="gloss-item">
+        <div class="gloss-term">GraphRAG</div>
+        <div class="gloss-def">Retrieval-Augmented Generation using a knowledge graph. Instead of just searching documents, you traverse a network of connected facts before generating an answer.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Vector Embedding</div>
+        <div class="gloss-def">A list of ~300 numbers that represents the meaning of a sentence. Two sentences about the same topic will have similar numbers, even if they use different words.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Graph Database (Neo4j)</div>
+        <div class="gloss-def">A database that stores connections between things, not just rows and columns. Like a mind-map you can query: "find everything connected to Metformin within 2 hops."</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Cypher</div>
+        <div class="gloss-def">Neo4j's query language. Like SQL but for graphs. <code>MATCH (p:Person)-[:TAKES_MEDICATION]->(m:Medication)</code> means "find all medications this person takes."</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">ChromaDB</div>
+        <div class="gloss-def">A local database that stores text embeddings (vectors) and lets you find the most similar chunks to a query. Runs entirely on your machine — no cloud needed.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Vertical</div>
+        <div class="gloss-def">A sub-category within a domain. The healthcare domain has 4 verticals: medical, fitness, mental health, genetics. Each vertical has its own node types and queries.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">MERGE (Cypher)</div>
+        <div class="gloss-def">A Neo4j command that means "create this node if it doesn't exist, otherwise update it." This makes ingestion safe to repeat — no duplicates ever created.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Pharmacogenomics</div>
+        <div class="gloss-def">The study of how your genes affect how your body processes medications. For example, if you're a "CYP2C19 poor metabolizer," certain antidepressants build up to higher levels in your blood.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">HbA1c</div>
+        <div class="gloss-def">A blood test that shows your average blood sugar level over the past 3 months. Used to monitor diabetes management. Normal is below 5.7%; diabetic is 6.5% or above.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Recency Boost</div>
+        <div class="gloss-def">A small score bonus given to recent events during retrieval. A lab result from last month is more relevant than one from 10 years ago — the system accounts for this.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Hybrid Retrieval</div>
+        <div class="gloss-def">Using two search methods at the same time — graph traversal (precise, structured) and vector similarity (broad, semantic) — then blending the results into one ranked list.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">BaseDomain / BaseVertical</div>
+        <div class="gloss-def">Abstract Python classes that define the contract every domain and vertical must follow. Like a job description — any new domain just needs to fill in the blanks and it plugs in automatically.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>Life Intelligence System · System Design · Generated by Claude Code</p>
+  <p style="margin-top:6px;">Open in browser: <code>open system-design.html</code></p>
+</footer>
+
+</body>
+</html>
