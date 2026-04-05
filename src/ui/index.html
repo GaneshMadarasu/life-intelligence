@@ -207,6 +207,8 @@
   <script>
     const API = 'http://127.0.0.1:8000';
     let isLoading = false;
+    // Conversation history: [{role:'user',content:'...'},{role:'assistant',content:'...'}]
+    let conversationHistory = [];
 
     // ── Init ──────────────────────────────────────────────────────────────
     async function init() {
@@ -364,10 +366,22 @@
         const res = await fetch(`${API}/query`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question, domains, top_k: 8 }),
+          body: JSON.stringify({
+            question,
+            domains,
+            top_k: 8,
+            conversation_history: conversationHistory,
+          }),
         });
         const data = await res.json();
         removeElement(thinkingId);
+
+        // Append to history: user question (plain) + assistant answer
+        conversationHistory.push({ role: 'user', content: question });
+        conversationHistory.push({ role: 'assistant', content: data.answer || '' });
+        // Keep last 10 turns (5 exchanges) to avoid token bloat
+        if (conversationHistory.length > 10) conversationHistory = conversationHistory.slice(-10);
+
         appendAnswer(data);
       } catch(e) {
         removeElement(thinkingId);
@@ -486,6 +500,7 @@
 
     function clearChat() {
       document.getElementById('messages').innerHTML = '';
+      conversationHistory = [];
     }
 
     function escHtml(s) {

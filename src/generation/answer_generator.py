@@ -44,6 +44,7 @@ class AnswerGenerator:
         domains: list[str] | None = None,
         cross_domain_insights: list[dict] | None = None,
         warnings: dict | None = None,
+        conversation_history: list[dict] | None = None,
     ) -> dict[str, Any]:
         if not context.strip():
             return {
@@ -70,14 +71,23 @@ class AnswerGenerator:
                 for i in cross_domain_insights[:5]
             )
 
-        user_message = f"""Question: {question}
+        current_message = f"""Question: {question}
 
-Personal data context:
+Personal data context (freshly retrieved):
 {context[:6000]}
 {warning_text}
 {insights_text}
 
 Please answer based on the provided personal data context."""
+
+        # Build messages: prior turns (plain Q&A) + current turn (with context)
+        messages: list[dict] = []
+        for turn in (conversation_history or []):
+            role = turn.get("role")
+            content = turn.get("content", "")
+            if role in ("user", "assistant") and content:
+                messages.append({"role": role, "content": content})
+        messages.append({"role": "user", "content": current_message})
 
         try:
             client = self._get_client()
@@ -85,7 +95,7 @@ Please answer based on the provided personal data context."""
                 model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
                 max_tokens=2048,
                 system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_message}],
+                messages=messages,
             )
             answer_text = response.content[0].text
 

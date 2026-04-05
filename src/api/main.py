@@ -96,6 +96,7 @@ class QueryRequest(BaseModel):
     date_from: str | None = None
     date_to: str | None = None
     top_k: int = 5
+    conversation_history: list[dict] = []
 
 
 # ── Domain management ─────────────────────────────────────────────────────────
@@ -209,6 +210,7 @@ async def query(req: QueryRequest) -> dict[str, Any]:
         domains=req.domains,
         cross_domain_insights=cross_insights,
         warnings=warnings,
+        conversation_history=req.conversation_history,
     )
     return answer
 
