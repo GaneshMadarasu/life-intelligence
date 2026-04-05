@@ -39,13 +39,23 @@ class HybridRetriever:
         )
         vector_results = self.vector.retrieve(question, domains, verticals, top_k * 2)
 
-        merged = self._fuse(graph_results, vector_results, top_k)
+        merged = self._fuse(graph_results, vector_results, top_k * 2)
 
-        total_context = "\n\n".join(
+        # Separate Whoop biometric rows — always include them verbatim in context
+        whoop_rows = [r for r in graph_results if r.get("result_type", "").startswith("whoop_")]
+        non_whoop = [r for r in merged if not r.get("result_type", "").startswith("whoop_")]
+
+        context_parts = []
+        if whoop_rows:
+            context_parts.append("=== Whoop Biometric Data (real-time from device) ===")
+            context_parts.extend(r["text"] for r in whoop_rows if r.get("text"))
+        context_parts.extend(
             r.get("text") or r.get("title") or str(r.get("name", ""))
-            for r in merged
+            for r in non_whoop[:top_k]
             if r.get("text") or r.get("title")
         )
+
+        total_context = "\n\n".join(p for p in context_parts if p)
 
         return {
             "graph_results": graph_results[:top_k],
