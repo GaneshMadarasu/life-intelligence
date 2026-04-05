@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life Intelligence</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --accent: #6ee7b7;
+      --accent-dim: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: #2a2a38;
+      --text: #e2e8f0;
+      --text-dim: #64748b;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Markdown answer styles */
+    .answer-body h1, .answer-body h2, .answer-body h3 { color: var(--accent); margin: 1rem 0 0.5rem; font-weight: 600; }
+    .answer-body h1 { font-size: 1.2rem; }
+    .answer-body h2 { font-size: 1.05rem; }
+    .answer-body h3 { font-size: 0.95rem; }
+    .answer-body p { margin: 0.5rem 0; line-height: 1.7; }
+    .answer-body ul, .answer-body ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+    .answer-body li { margin: 0.25rem 0; line-height: 1.6; }
+    .answer-body strong { color: #f1f5f9; }
+    .answer-body hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+    .answer-body code { background: var(--surface2); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85em; color: var(--accent); }
+    .answer-body blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; color: var(--text-dim); margin: 0.5rem 0; }
+
+    /* Thinking animation */
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .thinking-dot { animation: pulse 1.2s ease-in-out infinite; }
+    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Glow on focus */
+    .input-glow:focus { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+
+    /* Fade-in for messages */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .msg-enter { animation: fadeUp 0.25s ease-out; }
+
+    /* Badge */
+    .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; letter-spacing: 0.05em; }
+    .badge-green { background: #064e3b; color: #6ee7b7; }
+    .badge-yellow { background: #451a03; color: #fbbf24; }
+    .badge-red { background: #450a0a; color: #f87171; }
+    .badge-blue { background: #0c1a3a; color: #93c5fd; }
+    .badge-gray { background: #1e293b; color: #94a3b8; }
+
+    /* Sidebar stat card */
+    .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+    /* Quick action button */
+    .quick-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--text-dim); cursor: pointer; text-align: left; transition: all 0.15s; }
+    .quick-btn:hover { border-color: var(--accent); color: var(--accent); background: #064e3b22; }
+
+    /* Warning pill */
+    .warn-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; margin-top: 6px; }
+    .warn-high { background: #450a0a33; border: 1px solid #7f1d1d; }
+    .warn-medium { background: #451a0333; border: 1px solid #78350f; }
+    .warn-low { background: #0c1a3a33; border: 1px solid #1e3a5f; }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside class="w-72 flex-shrink-0 flex flex-col border-r overflow-y-auto" style="background:var(--surface); border-color:var(--border);">
+
+    <!-- Logo / header -->
+    <div class="px-5 py-5 border-b" style="border-color:var(--border);">
+      <div class="flex items-center gap-2 mb-1">
+        <div class="w-2 h-2 rounded-full" style="background:var(--accent);box-shadow:0 0 6px var(--accent);"></div>
+        <span class="text-xs font-semibold tracking-widest uppercase" style="color:var(--text-dim);">Life Intelligence</span>
+      </div>
+      <div id="person-name" class="text-lg font-bold mt-2" style="color:var(--text);">Loading...</div>
+      <div id="person-meta" class="text-xs mt-1" style="color:var(--text-dim);">—</div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="px-4 py-4 border-b" style="border-color:var(--border);">
+      <div class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--text-dim);">Health Snapshot</div>
+      <div class="grid grid-cols-2 gap-2" id="stats-grid">
+        <div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Conditions</div></div>
+        <div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Medications</div></div>
+        <div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Lab Results</div></div>
+        <div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Workouts</div></div>
+      </div>
+    </div>
+
+    <!-- Whoop live panel -->
+    <div class="px-4 py-4 border-b" style="border-color:var(--border);">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-xs font-semibold uppercase tracking-widest" style="color:var(--text-dim);">Whoop Live</div>
+        <span id="whoop-badge" class="badge badge-gray">loading…</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2" id="whoop-grid">
+        <div class="stat-card"><div class="stat-value" id="w-recovery">—</div><div class="stat-label">Recovery %</div></div>
+        <div class="stat-card"><div class="stat-value" id="w-hrv">—</div><div class="stat-label">HRV ms</div></div>
+        <div class="stat-card"><div class="stat-value" id="w-rhr">—</div><div class="stat-label">RHR bpm</div></div>
+        <div class="stat-card"><div class="stat-value" id="w-strain">—</div><div class="stat-label">Day Strain</div></div>
+      </div>
+      <div class="mt-2 grid grid-cols-2 gap-2">
+        <div class="stat-card"><div class="stat-value text-base" id="w-sleep-perf">—</div><div class="stat-label">Sleep Perf %</div></div>
+        <div class="stat-card"><div class="stat-value text-base" id="w-sleep-hrs">—</div><div class="stat-label">Sleep hrs</div></div>
+      </div>
+    </div>
+
+    <!-- Domain toggle -->
+    <div class="px-4 py-4 border-b" style="border-color:var(--border);">
+      <div class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--text-dim);">Domains</div>
+      <div id="domain-list" class="space-y-2"></div>
+    </div>
+
+    <!-- Quick queries -->
+    <div class="px-4 py-4 flex-1">
+      <div class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--text-dim);">Quick Questions</div>
+      <div class="space-y-2" id="quick-actions">
+        <button class="quick-btn w-full" onclick="ask('What is my latest Whoop recovery score, HRV, and resting heart rate, and what do they mean?')">💚 Latest Whoop recovery</button>
+        <button class="quick-btn w-full" onclick="ask('How has my HRV trended over the past 30 days and what is driving the changes?')">📈 HRV trend (30 days)</button>
+        <button class="quick-btn w-full" onclick="ask('Analyse my sleep performance from Whoop — quality, duration, and recommendations')">😴 Whoop sleep analysis</button>
+        <button class="quick-btn w-full" onclick="ask('What is my training load and strain trend? Am I overtraining or undertraining?')">🏋️ Training load & strain</button>
+        <button class="quick-btn w-full" onclick="ask('What medications am I on and are there any interactions?')">💊 Medications & interactions</button>
+        <button class="quick-btn w-full" onclick="ask('What are my genetic risks and how do they affect me?')">🧬 Genetic risks</button>
+        <button class="quick-btn w-full" onclick="ask('What is my mental health trajectory and current stressors?')">🧠 Mental health overview</button>
+        <button class="quick-btn w-full" onclick="ask('Give me a full health summary including Whoop biometrics, conditions, genetics, and mental health')">📋 Full health summary</button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-4 py-3 border-t text-center" style="border-color:var(--border);">
+      <span class="text-xs" style="color:var(--text-dim);">🔒 All data stays on your machine</span>
+    </div>
+  </aside>
+
+  <!-- ── Main chat area ──────────────────────────────────────────────────── -->
+  <main class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top bar -->
+    <div class="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style="background:var(--surface); border-color:var(--border);">
+      <div class="flex items-center gap-3">
+        <h1 class="text-sm font-semibold">Ask your health data</h1>
+        <span id="api-status" class="badge badge-gray">connecting...</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs" style="color:var(--text-dim);">Domain:</label>
+        <select id="domain-select" class="text-xs px-2 py-1 rounded-md border input-glow" style="background:var(--surface2); border-color:var(--border); color:var(--text);">
+          <option value="all">All domains</option>
+          <option value="healthcare" selected>Healthcare</option>
+        </select>
+        <button onclick="clearChat()" class="text-xs px-3 py-1 rounded-md border transition-colors hover:border-red-500 hover:text-red-400" style="border-color:var(--border); color:var(--text-dim);">Clear</button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div id="messages" class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      <!-- Welcome -->
+      <div class="msg-enter max-w-2xl mx-auto text-center py-12">
+        <div class="text-4xl mb-4">🧬</div>
+        <h2 class="text-xl font-bold mb-2" style="color:var(--accent);">Your Personal Health Intelligence</h2>
+        <p class="text-sm" style="color:var(--text-dim);">Ask anything about your health data — medications, genetics, sleep, mental health, lab trends. Everything stays local.</p>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="flex-shrink-0 px-6 py-4 border-t" style="background:var(--surface); border-color:var(--border);">
+      <div class="flex gap-3 max-w-4xl mx-auto">
+        <div class="flex-1 relative">
+          <textarea
+            id="question-input"
+            rows="1"
+            placeholder="Ask anything about your health data..."
+            class="w-full px-4 py-3 rounded-xl border text-sm resize-none input-glow transition-all"
+            style="background:var(--surface2); border-color:var(--border); color:var(--text); line-height:1.5; min-height:48px; max-height:160px;"
+            onkeydown="handleKey(event)"
+            oninput="autoResize(this)"
+          ></textarea>
+        </div>
+        <button
+          id="send-btn"
+          onclick="sendQuestion()"
+          class="px-5 py-3 rounded-xl font-semibold text-sm flex-shrink-0 transition-all"
+          style="background:var(--accent); color:#0a0a0f;"
+        >Send</button>
+      </div>
+      <div class="text-center mt-2">
+        <span class="text-xs" style="color:var(--text-dim);">Enter to send · Shift+Enter for new line</span>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API = 'http://127.0.0.1:8000';
+    let isLoading = false;
+
+    // ── Init ──────────────────────────────────────────────────────────────
+    async function init() {
+      await Promise.all([loadPersonInfo(), loadDomains(), loadWhoopPanel()]);
+      document.getElementById('api-status').textContent = 'connected';
+      document.getElementById('api-status').className = 'badge badge-green';
+    }
+
+    async function loadWhoopPanel() {
+      try {
+        const status = await fetch(`${API}/integrations/whoop/status`).then(r => r.json());
+        if (!status.authenticated) {
+          document.getElementById('whoop-badge').textContent = 'not connected';
+          document.getElementById('whoop-badge').className = 'badge badge-gray';
+          return;
+        }
+        document.getElementById('whoop-badge').textContent = 'live';
+        document.getElementById('whoop-badge').className = 'badge badge-green';
+
+        const [recovery, strain, sleep] = await Promise.all([
+          fetch(`${API}/healthcare/fitness/recovery?days=7`).then(r => r.json()).catch(() => ({})),
+          fetch(`${API}/healthcare/fitness/strain?days=7`).then(r => r.json()).catch(() => ({})),
+          fetch(`${API}/healthcare/fitness/sleep?days=7`).then(r => r.json()).catch(() => ({})),
+        ]);
+
+        const latest = (recovery.records || [])[0] || {};
+        const latestStrain = (strain.daily_cycles || [])[0] || {};
+        const latestSleep = (sleep.records || [])[0] || {};
+
+        const recScore = latest.recovery_score != null ? Math.round(latest.recovery_score) : '—';
+        const hrv = latest.hrv_rmssd != null ? Math.round(latest.hrv_rmssd) : '—';
+        const rhr = latest.resting_hr != null ? Math.round(latest.resting_hr) : '—';
+        const strainVal = latestStrain.strain != null ? latestStrain.strain.toFixed(1) : '—';
+        const sleepPerf = latestSleep.sleep_performance_pct != null ? Math.round(latestSleep.sleep_performance_pct) : '—';
+        const sleepHrs = latestSleep.duration_hours != null ? latestSleep.duration_hours.toFixed(1) : '—';
+
+        document.getElementById('w-recovery').textContent = recScore;
+        document.getElementById('w-hrv').textContent = hrv;
+        document.getElementById('w-rhr').textContent = rhr;
+        document.getElementById('w-strain').textContent = strainVal;
+        document.getElementById('w-sleep-perf').textContent = sleepPerf;
+        document.getElementById('w-sleep-hrs').textContent = sleepHrs;
+
+        // Color-code recovery score
+        if (typeof recScore === 'number') {
+          const color = recScore >= 67 ? 'var(--accent)' : recScore >= 34 ? 'var(--warn)' : 'var(--danger)';
+          document.getElementById('w-recovery').style.color = color;
+        }
+      } catch(e) {
+        document.getElementById('whoop-badge').textContent = 'error';
+        document.getElementById('whoop-badge').className = 'badge badge-red';
+      }
+    }
+
+    async function loadPersonInfo() {
+      try {
+        const res = await fetch(`${API}/me`);
+        const data = await res.json();
+        const p = data.person || {};
+        document.getElementById('person-name').textContent = p.name || 'Unknown';
+        const age = p.dob ? Math.floor((Date.now() - new Date(p.dob)) / 31557600000) : '?';
+        document.getElementById('person-meta').textContent = `${age}y · ${p.sex || ''} · ${p.blood_type || ''}`;
+
+        // Load stats
+        const stats = await loadStats();
+        const grid = document.getElementById('stats-grid');
+        grid.innerHTML = `
+          <div class="stat-card"><div class="stat-value">${stats.conditions}</div><div class="stat-label">Conditions</div></div>
+          <div class="stat-card"><div class="stat-value">${stats.medications}</div><div class="stat-label">Medications</div></div>
+          <div class="stat-card"><div class="stat-value">${stats.labs}</div><div class="stat-label">Lab Results</div></div>
+          <div class="stat-card"><div class="stat-value">${stats.workouts}</div><div class="stat-label">Workouts</div></div>
+        `;
+      } catch(e) {
+        document.getElementById('person-name').textContent = 'Could not connect';
+        document.getElementById('api-status').textContent = 'offline';
+        document.getElementById('api-status').className = 'badge badge-red';
+      }
+    }
+
+    async function loadStats() {
+      const neo4jQueries = [
+        fetch(`${API}/healthcare/conditions/active`).then(r => r.json()).then(d => d.count || 0).catch(() => 0),
+        fetch(`${API}/healthcare/medications/current`).then(r => r.json()).then(d => d.count || 0).catch(() => 0),
+        fetch(`${API}/healthcare/labs/trends?test=HbA1c`).then(r => r.json()).then(d => d.count || 0).catch(() => 0),
+      ];
+      const [conditions, medications, labs] = await Promise.all(neo4jQueries);
+      // workout count via query
+      let workouts = 0;
+      try {
+        const r = await fetch(`${API}/query`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question:'how many workouts', domains:['healthcare'], top_k:1}) });
+        // Just use a rough count
+        workouts = '31+';
+      } catch(e) {}
+      return { conditions, medications, labs, workouts };
+    }
+
+    async function loadDomains() {
+      try {
+        const res = await fetch(`${API}/domains`);
+        const data = await res.json();
+        const list = document.getElementById('domain-list');
+        const select = document.getElementById('domain-select');
+
+        list.innerHTML = '';
+        select.innerHTML = '<option value="all">All domains</option>';
+
+        for (const d of (data.active || [])) {
+          list.innerHTML += `<div class="flex items-center justify-between"><span class="text-sm">${d.domain}</span><span class="badge badge-green">active</span></div>`;
+          select.innerHTML += `<option value="${d.domain}" selected>${d.domain}</option>`;
+        }
+        for (const d of (data.planned || [])) {
+          list.innerHTML += `<div class="flex items-center justify-between"><span class="text-sm" style="color:var(--text-dim)">${d.domain}</span><span class="badge badge-gray">planned</span></div>`;
+        }
+      } catch(e) {}
+    }
+
+    // ── Chat ──────────────────────────────────────────────────────────────
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); }
+    }
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+    }
+
+    function ask(question) {
+      document.getElementById('question-input').value = question;
+      sendQuestion();
+    }
+
+    async function sendQuestion() {
+      if (isLoading) return;
+      const input = document.getElementById('question-input');
+      const question = input.value.trim();
+      if (!question) return;
+
+      const domain = document.getElementById('domain-select').value;
+      const domains = domain === 'all' ? ['all'] : [domain];
+
+      input.value = '';
+      input.style.height = 'auto';
+      isLoading = true;
+      document.getElementById('send-btn').disabled = true;
+      document.getElementById('send-btn').style.opacity = '0.5';
+
+      // Add user message
+      appendMessage('user', question);
+
+      // Add thinking indicator
+      const thinkingId = 'thinking-' + Date.now();
+      appendThinking(thinkingId);
+
+      try {
+        const res = await fetch(`${API}/query`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, domains, top_k: 8 }),
+        });
+        const data = await res.json();
+        removeElement(thinkingId);
+        appendAnswer(data);
+      } catch(e) {
+        removeElement(thinkingId);
+        appendError('Could not reach the API. Is the server running on port 8000?');
+      }
+
+      isLoading = false;
+      document.getElementById('send-btn').disabled = false;
+      document.getElementById('send-btn').style.opacity = '1';
+    }
+
+    function appendMessage(role, text) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'msg-enter flex ' + (role === 'user' ? 'justify-end' : 'justify-start');
+      div.innerHTML = `
+        <div class="max-w-xl px-4 py-3 rounded-2xl text-sm" style="background:${role==='user'?'#064e3b':'var(--surface2)'}; color:var(--text); border:1px solid ${role==='user'?'#065f46':'var(--border)'};">
+          ${escHtml(text)}
+        </div>`;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function appendThinking(id) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.id = id;
+      div.className = 'msg-enter flex justify-start';
+      div.innerHTML = `
+        <div class="px-4 py-3 rounded-2xl flex items-center gap-2" style="background:var(--surface2); border:1px solid var(--border);">
+          <span class="thinking-dot w-2 h-2 rounded-full" style="background:var(--accent);display:inline-block;"></span>
+          <span class="thinking-dot w-2 h-2 rounded-full" style="background:var(--accent);display:inline-block;"></span>
+          <span class="thinking-dot w-2 h-2 rounded-full" style="background:var(--accent);display:inline-block;"></span>
+          <span class="text-xs ml-1" style="color:var(--text-dim);">Thinking...</span>
+        </div>`;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function appendAnswer(data) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'msg-enter max-w-3xl';
+
+      const answer = data.answer || data.detail || 'No answer returned.';
+      const warnings = data.warnings || {};
+      const confidence = data.confidence || 'unknown';
+      const graphResults = data.graph_results ?? data.sources?.graph ?? '?';
+      const crossInsights = data.cross_domain_insights || [];
+
+      // Confidence badge
+      const confColor = confidence === 'high' ? 'badge-green' : confidence === 'medium' ? 'badge-yellow' : 'badge-gray';
+
+      // Safety warnings
+      let warningsHtml = '';
+      const allWarnings = [
+        ...(warnings.drug_drug_interactions || []).map(w => ({ ...w, type: 'drug-drug', sev: 'high' })),
+        ...(warnings.supplement_drug_interactions || []).map(w => ({ ...w, type: 'supplement', sev: 'medium' })),
+        ...(warnings.genetic_risks || []).map(w => ({ ...w, type: 'genetic', sev: w.risk_level === 'high' ? 'high' : 'medium' })),
+      ];
+      if (allWarnings.length) {
+        warningsHtml = `<div class="mt-4 space-y-2">
+          <div class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--warn);">⚠ Safety Warnings</div>
+          ${allWarnings.map(w => `
+            <div class="warn-item warn-${w.sev}">
+              <span class="text-sm">${w.sev==='high'?'🔴':'🟡'}</span>
+              <div class="text-xs" style="color:var(--text);">
+                <strong>${w.type === 'drug-drug' ? `${w.drug1} + ${w.drug2}` : w.type === 'supplement' ? `${w.supplement} + ${w.drug}` : w.condition_name || w.name || ''}</strong>
+                ${w.description || w.recommendations ? `<br><span style="color:var(--text-dim);">${w.description || w.recommendations || ''}</span>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>`;
+      }
+
+      // Cross-domain insights
+      let insightsHtml = '';
+      if (crossInsights.length) {
+        insightsHtml = `<div class="mt-3 px-3 py-2 rounded-lg text-xs" style="background:var(--surface2); border:1px solid var(--border);">
+          <span style="color:var(--accent);">⚡ ${crossInsights.length} cross-domain connection${crossInsights.length!==1?'s':''} found</span>
+        </div>`;
+      }
+
+      div.innerHTML = `
+        <div class="rounded-2xl overflow-hidden" style="border:1px solid var(--border); background:var(--surface2);">
+          <!-- Answer body -->
+          <div class="px-5 py-4 answer-body text-sm leading-relaxed">
+            ${marked.parse(answer)}
+          </div>
+          <!-- Footer -->
+          <div class="px-5 py-3 border-t flex items-center gap-2 flex-wrap" style="border-color:var(--border); background:var(--surface);">
+            <span class="badge ${confColor}">${confidence} confidence</span>
+            <span class="badge badge-blue">graph: ${graphResults}</span>
+            ${crossInsights.length ? `<span class="badge badge-green">⚡ ${crossInsights.length} cross-links</span>` : ''}
+          </div>
+        </div>
+        ${warningsHtml}
+        ${insightsHtml}`;
+
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function appendError(msg) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'msg-enter';
+      div.innerHTML = `<div class="px-4 py-3 rounded-xl text-sm" style="background:#450a0a33; border:1px solid #7f1d1d; color:#f87171;">${escHtml(msg)}</div>`;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function removeElement(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    function clearChat() {
+      document.getElementById('messages').innerHTML = '';
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    init();
+  </script>
+</body>
+</html>

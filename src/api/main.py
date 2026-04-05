@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -30,6 +33,15 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+# Serve the UI
+_UI_DIR = Path(__file__).parent.parent / "ui"
+if _UI_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(_UI_DIR)), name="static")
+
+@app.get("/", include_in_schema=False)
+async def serve_ui():
+    return FileResponse(str(_UI_DIR / "index.html"))
 
 # ── Lazy singletons ───────────────────────────────────────────────────────────
 

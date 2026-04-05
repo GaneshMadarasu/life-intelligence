@@ -14,7 +14,8 @@ class MentalHealthGraphBuilder:
         self.neo4j = neo4j_client
 
     def build(self, entities: dict[str, Any], file_path: str, metadata: dict) -> str:
-        doc_id = f"mh_{hashlib.md5(f'{file_path}_{metadata.get(\"date\",\"\")}'.encode()).hexdigest()[:16]}"
+        _key = f"{file_path}_{metadata.get('date','')}"
+        doc_id = f"mh_{hashlib.md5(_key.encode()).hexdigest()[:16]}"
         self.neo4j.run_query(
             """
             MERGE (d:Document {id: $id})
@@ -39,7 +40,8 @@ class MentalHealthGraphBuilder:
         for s in sessions:
             if not s.get("date"):
                 continue
-            sid = f"therapy_{hashlib.md5(f'{s[\"date\"]}_{s.get(\"therapist\",\"\")}'.encode()).hexdigest()[:12]}"
+            _key = f"{s['date']}_{s.get('therapist','')}"
+            sid = f"therapy_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (ts:TherapySession {id: $id})
@@ -110,7 +112,8 @@ class MentalHealthGraphBuilder:
         for s in stressors:
             if not s.get("description"):
                 continue
-            sid = f"stressor_{hashlib.md5(f'{s[\"description\"]}_{s.get(\"start_date\",\"\")}'.encode()).hexdigest()[:12]}"
+            _key = f"{s['description']}_{s.get('start_date','')}"
+            sid = f"stressor_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (s:Stressor {id: $id})
@@ -157,7 +160,8 @@ class MentalHealthGraphBuilder:
         for s in sessions:
             if not s.get("date"):
                 continue
-            sid = f"med_{hashlib.md5(f'{s[\"date\"]}_{s.get(\"type\",\"\")}'.encode()).hexdigest()[:12]}"
+            _key = f"{s['date']}_{s.get('type','')}"
+            sid = f"med_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (ms:MeditationSession {id: $id})

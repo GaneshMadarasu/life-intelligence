@@ -25,9 +25,10 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-WHOOP_AUTH_URL = "https://api.prod.whoop.com/oauth/oauth2/auth"
+WHOOP_AUTH_URL  = "https://api.prod.whoop.com/oauth/oauth2/auth"
 WHOOP_TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token"
-WHOOP_API_BASE  = "https://api.prod.whoop.com/developer/v1"
+WHOOP_API_V1    = "https://api.prod.whoop.com/developer/v1"   # cycle
+WHOOP_API_V2    = "https://api.prod.whoop.com/developer/v2"   # recovery, sleep, workout
 REDIRECT_URI    = "http://localhost:8080/callback"
 SCOPES          = "offline read:recovery read:sleep read:workout read:profile read:cycles read:body_measurement"
 
@@ -216,19 +217,19 @@ class WhoopClient:
 
     # ── API helpers ───────────────────────────────────────────────────────────
 
-    def _get(self, path: str, params: dict | None = None) -> dict:
-        url = f"{WHOOP_API_BASE}{path}"
+    def _get(self, path: str, params: dict | None = None, base: str | None = None) -> dict:
+        url = f"{base or WHOOP_API_V1}{path}"
         headers = {"Authorization": f"Bearer {self._access_token()}"}
         resp = httpx.get(url, headers=headers, params=params or {}, timeout=30)
         resp.raise_for_status()
         return resp.json()
 
-    def _paginate(self, path: str, params: dict | None = None) -> Iterator[dict]:
+    def _paginate(self, path: str, params: dict | None = None, base: str | None = None) -> Iterator[dict]:
         """Yield every record across all pages."""
         params = dict(params or {})
         params.setdefault("limit", 25)
         while True:
-            data = self._get(path, params)
+            data = self._get(path, params, base=base)
             for record in data.get("records", []):
                 yield record
             next_token = data.get("next_token")
@@ -239,19 +240,19 @@ class WhoopClient:
     # ── Public API calls ──────────────────────────────────────────────────────
 
     def get_profile(self) -> dict:
-        return self._get("/user/profile/basic")
+        return self._get("/user/profile/basic", base=WHOOP_API_V1)
 
     def get_recoveries(self, start: str, end: str) -> list[dict]:
-        return list(self._paginate("/recovery", {"start": start, "end": end}))
+        return list(self._paginate("/recovery", {"start": start, "end": end}, base=WHOOP_API_V2))
 
     def get_sleeps(self, start: str, end: str) -> list[dict]:
-        return list(self._paginate("/sleep", {"start": start, "end": end}))
+        return list(self._paginate("/activity/sleep", {"start": start, "end": end}, base=WHOOP_API_V2))
 
     def get_workouts(self, start: str, end: str) -> list[dict]:
-        return list(self._paginate("/workout", {"start": start, "end": end}))
+        return list(self._paginate("/activity/workout", {"start": start, "end": end}, base=WHOOP_API_V2))
 
     def get_cycles(self, start: str, end: str) -> list[dict]:
-        return list(self._paginate("/cycle", {"start": start, "end": end}))
+        return list(self._paginate("/cycle", {"start": start, "end": end}, base=WHOOP_API_V1))
 
     # ── Convenience ───────────────────────────────────────────────────────────
 

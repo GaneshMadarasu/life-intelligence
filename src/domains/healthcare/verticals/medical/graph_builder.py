@@ -134,7 +134,8 @@ class MedicalGraphBuilder:
         for lr in lab_results:
             if not lr.get("test_name"):
                 continue
-            lab_id = f"lab_{hashlib.md5(f'{lr[\"test_name\"]}_{lr.get(\"date\",\"\")}_{lr.get(\"value\",\"\")}'.encode()).hexdigest()[:12]}"
+            _key = f"{lr['test_name']}_{lr.get('date','')}_{lr.get('value','')}"
+            lab_id = f"lab_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (l:LabResult {id: $id})
@@ -163,7 +164,8 @@ class MedicalGraphBuilder:
         for v in vitals:
             if not v.get("type"):
                 continue
-            vital_id = f"vital_{hashlib.md5(f'{v[\"type\"]}_{v.get(\"date\",\"\")}_{v.get(\"value\",\"\")}'.encode()).hexdigest()[:12]}"
+            _key = f"{v['type']}_{v.get('date','')}_{v.get('value','')}"
+            vital_id = f"vital_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (v:Vital {id: $id})
@@ -207,7 +209,8 @@ class MedicalGraphBuilder:
         for pr in procedures:
             if not pr.get("name"):
                 continue
-            proc_id = f"proc_{hashlib.md5(f'{pr[\"name\"]}_{pr.get(\"date\",\"\")}'.encode()).hexdigest()[:12]}"
+            _key = f"{pr['name']}_{pr.get('date','')}"
+            proc_id = f"proc_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (pr:Procedure {id: $id})
@@ -234,7 +237,8 @@ class MedicalGraphBuilder:
         for v in vaccines:
             if not v.get("name"):
                 continue
-            vac_id = f"vac_{hashlib.md5(f'{v[\"name\"]}_{v.get(\"date\",\"\")}'.encode()).hexdigest()[:12]}"
+            _key = f"{v['name']}_{v.get('date','')}"
+            vac_id = f"vac_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (v:Vaccine {id: $id})
@@ -259,7 +263,8 @@ class MedicalGraphBuilder:
         for h in hospitalizations:
             if not h.get("reason"):
                 continue
-            hosp_id = f"hosp_{hashlib.md5(f'{h[\"reason\"]}_{h.get(\"admit_date\",\"\")}'.encode()).hexdigest()[:12]}"
+            _key = f"{h['reason']}_{h.get('admit_date','')}"
+            hosp_id = f"hosp_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (h:Hospitalization {id: $id})

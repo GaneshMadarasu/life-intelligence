@@ -14,7 +14,8 @@ class GeneticsGraphBuilder:
         self.neo4j = neo4j_client
 
     def build(self, entities: dict[str, Any], file_path: str, metadata: dict) -> str:
-        doc_id = f"gen_{hashlib.md5(f'{file_path}_{metadata.get(\"date\",\"\")}'.encode()).hexdigest()[:16]}"
+        _key = f"{file_path}_{metadata.get('date','')}"
+        doc_id = f"gen_{hashlib.md5(_key.encode()).hexdigest()[:16]}"
         report = entities.get("genetic_report", {})
         self.neo4j.run_query(
             """
@@ -79,7 +80,8 @@ class GeneticsGraphBuilder:
         for v in variants:
             if not v.get("gene"):
                 continue
-            vid = f"var_{hashlib.md5(f'{v.get(\"rsid\",\"\")}_{v[\"gene\"]}'.encode()).hexdigest()[:12]}"
+            _key = f"{v.get('rsid','')}_{v['gene']}"
+            vid = f"var_{hashlib.md5(_key.encode()).hexdigest()[:12]}"
             self.neo4j.run_query(
                 """
                 MERGE (gv:GeneticVariant {id: $id})
