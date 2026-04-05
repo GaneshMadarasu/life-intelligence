@@ -20,10 +20,10 @@ class PersonManager:
 
     def ensure_person(
         self,
-        name: str = "Alex Johnson",
-        dob: str = "1985-03-15",
+        name: str = "Ganesh Madarasu",
+        dob: str = "1998-09-15",
         sex: str = "Male",
-        blood_type: str = "O+",
+        blood_type: str = "B+",
     ) -> dict:
         """Create or update the single Person node."""
         return self.neo4j.get_or_create_person(name, dob, sex, blood_type)
