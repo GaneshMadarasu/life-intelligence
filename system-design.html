@@ -393,6 +393,7 @@
     <li><a href="#diagram">Architecture</a></li>
     <li><a href="#dataflow">Data Flow</a></li>
     <li><a href="#components">Components</a></li>
+    <li><a href="#whoop">Whoop Integration</a></li>
     <li><a href="#storage">Storage</a></li>
     <li><a href="#safety">Safety</a></li>
     <li><a href="#cross-domain">Cross-Domain</a></li>
@@ -409,6 +410,8 @@
     <p>A private, locally-run knowledge graph that unifies your entire life — health records, finances, legal contracts, career history — so you can ask questions no single app could ever answer.</p>
     <div class="badges">
       <span class="badge active">✅ Healthcare — Active</span>
+      <span class="badge active">✅ Whoop Live Biometrics</span>
+      <span class="badge active">✅ Web UI — Chat Interface</span>
       <span class="badge">🔜 Finances</span>
       <span class="badge">🔜 Legal Contracts</span>
       <span class="badge">🔜 Career</span>
@@ -485,7 +488,7 @@
         <div style="margin-top:20px;padding:14px;background:var(--green-light);border:1px solid #a7f3d0;border-radius:8px;">
           <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;">Healthcare Nodes (Seeded)</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            <span class="chip">Condition</span><span class="chip">Medication</span><span class="chip">Supplement</span><span class="chip">LabResult</span><span class="chip">Vital</span><span class="chip">Allergy</span><span class="chip">Procedure</span><span class="chip">Vaccine</span><span class="chip">Hospitalization</span><span class="chip">Workout</span><span class="chip">Meal</span><span class="chip">BodyMetric</span><span class="chip">SleepRecord</span><span class="chip">MoodEntry</span><span class="chip">TherapySession</span><span class="chip">Stressor</span><span class="chip">Gene</span><span class="chip">GeneticRisk</span><span class="chip">Pharmacogene</span>
+            <span class="chip">Condition</span><span class="chip">Medication</span><span class="chip">Supplement</span><span class="chip">LabResult</span><span class="chip">Vital</span><span class="chip">Allergy</span><span class="chip">Procedure</span><span class="chip">Vaccine</span><span class="chip">Hospitalization</span><span class="chip">Workout</span><span class="chip">Meal</span><span class="chip">BodyMetric</span><span class="chip">SleepRecord</span><span class="chip" style="border-color:#6ee7b7;background:#064e3b22;color:#6ee7b7;">WhoopRecovery ⚡</span><span class="chip" style="border-color:#6ee7b7;background:#064e3b22;color:#6ee7b7;">WhoopCycle ⚡</span><span class="chip">MoodEntry</span><span class="chip">TherapySession</span><span class="chip">Stressor</span><span class="chip">JournalEntry</span><span class="chip">MeditationSession</span><span class="chip">Gene</span><span class="chip">GeneticRisk</span><span class="chip">Pharmacogene</span><span class="chip">AncestrySegment</span>
           </div>
         </div>
       </div>
@@ -504,18 +507,23 @@
       <!-- User row -->
       <div class="diagram-section-label">You (the user)</div>
       <div class="diagram-row">
-        <div class="dbox dbox-blue" style="min-width:220px;">
+        <div class="dbox dbox-blue" style="min-width:200px;">
           <div class="dbox-title">📋 Your Documents</div>
-          <div class="dbox-desc">Lab PDFs · prescription bottles · genetics reports · therapy notes · insurance policies</div>
+          <div class="dbox-desc">Lab PDFs · prescriptions · genetics reports · therapy notes</div>
         </div>
         <div style="color:rgba(255,255,255,.3);font-size:20px;">→</div>
         <div class="dbox dbox-blue" style="min-width:180px;">
-          <div class="dbox-title">💬 Your Question</div>
-          <div class="dbox-desc">"What drugs interact with my supplements?" via CLI or API</div>
+          <div class="dbox-title">💬 Web UI / CLI</div>
+          <div class="dbox-desc">Dark-themed chat at localhost:8000 · multi-turn conversation memory</div>
+        </div>
+        <div style="color:rgba(255,255,255,.3);font-size:20px;">→</div>
+        <div class="dbox dbox-green" style="min-width:180px;">
+          <div class="dbox-title">⌚ Whoop Device</div>
+          <div class="dbox-desc">Live recovery · HRV · sleep · strain · workouts via OAuth2 API</div>
         </div>
       </div>
 
-      <div class="arrow-down">↓ <span class="arrow-label">ingest file / POST /query</span> ↓</div>
+      <div class="arrow-down">↓ <span class="arrow-label">ingest file / POST /query / whoop_sync.py</span> ↓</div>
 
       <!-- API row -->
       <div class="diagram-section-label">API Layer · FastAPI · localhost:8000 only</div>
@@ -598,7 +606,7 @@
           <div style="font-size:12px;font-weight:700;color:#6ee7b7;margin-bottom:8px;">✅ Healthcare</div>
           <div class="verticals-row" style="flex-direction:column;gap:4px;">
             <div class="vbox"><div class="vbox-title">🏥 Medical</div><div class="vbox-desc">conditions, meds, labs, vitals</div></div>
-            <div class="vbox"><div class="vbox-title">🏃 Fitness</div><div class="vbox-desc">workouts, sleep, supplements</div></div>
+            <div class="vbox"><div class="vbox-title">🏃 Fitness</div><div class="vbox-desc">workouts, sleep, supplements, Whoop biometrics ⚡</div></div>
             <div class="vbox"><div class="vbox-title">🧠 Mental Health</div><div class="vbox-desc">therapy, mood, stress</div></div>
             <div class="vbox"><div class="vbox-title">🧬 Genetics</div><div class="vbox-desc">risks, pharmacogenes, ancestry</div></div>
           </div>
@@ -661,10 +669,11 @@
           <div class="flow-num blue">1</div>
           <div class="flow-body">
             <h4>📝 You ask a question</h4>
-            <p>You type your question in the CLI or call <code>POST /query</code>. Example: <em>"What medications am I on and do any interact with my supplements?"</em></p>
+            <p>You type in the <strong>web chat UI</strong> at <code>localhost:8000</code>, the CLI, or call <code>POST /query</code> directly. The UI maintains a rolling conversation history (last 5 exchanges) so follow-up questions like "and how does that compare to last week?" work naturally.</p>
             <div class="flow-detail">
+              <span class="flow-chip b">Web UI: http://127.0.0.1:8000</span>
               <span class="flow-chip b">CLI: python scripts/query.py</span>
-              <span class="flow-chip b">API: POST /query</span>
+              <span class="flow-chip b">API: POST /query + conversation_history[ ]</span>
             </div>
           </div>
         </div>
@@ -672,11 +681,12 @@
         <div class="flow-step">
           <div class="flow-num green">2</div>
           <div class="flow-body">
-            <h4>🔍 Two searches fire in parallel</h4>
-            <p>The <strong>Graph Retriever</strong> runs Cypher queries against Neo4j — traversing relationships like "Person → TAKES_MEDICATION → Medication → INTERACTS_WITH → Supplement". The <strong>Vector Retriever</strong> converts your question into a list of numbers (an embedding) and finds the most similar text chunks stored in ChromaDB.</p>
+            <h4>🔍 Two searches fire in parallel + Whoop injection</h4>
+            <p>The <strong>Graph Retriever</strong> runs Cypher queries against Neo4j — traversing relationships like "Person → TAKES_MEDICATION → Medication → INTERACTS_WITH → Supplement". The <strong>Vector Retriever</strong> finds semantically similar text chunks in ChromaDB. If the question mentions fitness keywords (HRV, recovery, strain, sleep, workout), the graph retriever also fetches the last 14 days of <strong>live Whoop biometrics</strong> directly from <code>WhoopRecovery</code>, <code>WhoopCycle</code>, <code>SleepRecord</code>, and <code>Workout</code> nodes.</p>
             <div class="flow-detail">
               <span class="flow-chip g">Graph: Cypher traversal in Neo4j</span>
               <span class="flow-chip p">Vector: Semantic similarity in ChromaDB</span>
+              <span class="flow-chip g">Whoop: live biometric injection (keyword-triggered)</span>
             </div>
           </div>
         </div>
@@ -724,10 +734,11 @@
           <div class="flow-num purple">6</div>
           <div class="flow-body">
             <h4>🤖 Claude reads your data and writes the answer</h4>
-            <p>Claude claude-sonnet-4-6 receives: your question + retrieved context from your personal records + any safety warnings. It is instructed to only use the provided context (no hallucination), cite specific values (dates, dosages, test results), and lead with safety warnings if any exist.</p>
+            <p>Claude claude-sonnet-4-6 receives: your <strong>conversation history</strong> (prior Q&amp;A turns) + the current question with freshly retrieved context + any safety warnings. Prior turns are passed as actual Anthropic message turns — so the model naturally refers back to earlier questions. It is instructed to only use the provided context, cite specific values (dates, dosages, biometric readings), and lead with safety warnings if any exist.</p>
             <div class="flow-detail">
               <span class="flow-chip p">Model: claude-sonnet-4-6</span>
-              <span class="flow-chip p">Max context: ~6,000 chars of your data</span>
+              <span class="flow-chip p">Context: ~6,000 chars of your data</span>
+              <span class="flow-chip p">History: last 5 exchanges (10 messages)</span>
               <span class="flow-chip p">Grounded: no hallucination outside context</span>
             </div>
           </div>
@@ -892,12 +903,40 @@
           <div class="comp-icon" style="background:var(--orange-light);">🤖</div>
           <div class="comp-name">Answer Generator</div>
         </div>
-        <div class="comp-job">Sends the retrieved context + safety warnings to Claude claude-sonnet-4-6 with a strict system prompt: answer only from the provided data, cite specific facts, lead with safety warnings, highlight cross-domain insights.</div>
-        <div class="comp-analogy">Like a brilliant doctor who will only tell you what the test results actually say — never guessing — and always leads with the most urgent finding.</div>
-        <div class="comp-tech">Tech: Anthropic SDK · claude-sonnet-4-6</div>
+        <div class="comp-job">Sends the full conversation history + retrieved context + safety warnings to Claude claude-sonnet-4-6. Prior Q&amp;A turns are passed as real message turns (not stuffed into the prompt), enabling natural multi-turn follow-ups. History is capped at 10 messages (5 exchanges) to bound token usage.</div>
+        <div class="comp-analogy">Like a brilliant doctor who remembers everything you said earlier in the appointment — never guessing — and always leads with the most urgent finding.</div>
+        <div class="comp-tech">Tech: Anthropic SDK · claude-sonnet-4-6 · multi-turn messages API</div>
         <div class="comp-chips" style="margin-top:8px;">
-          <span class="chip in">IN: question + context + warnings</span>
+          <span class="chip in">IN: question + context + history + warnings</span>
           <span class="chip out">OUT: {answer, key_facts, confidence}</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--green-light);">⌚</div>
+          <div class="comp-name">Whoop Integration</div>
+        </div>
+        <div class="comp-job">OAuth2 client that authenticates with the Whoop Developer API (v1 for cycles, v2 for recovery/sleep/workout), syncs up to 90 days of biometrics, and writes them as <code>WhoopRecovery</code>, <code>WhoopCycle</code>, <code>SleepRecord</code>, and <code>Workout</code> nodes into Neo4j. Token refresh is automatic. The graph retriever injects Whoop data into the AI context whenever fitness-related keywords appear in the query.</div>
+        <div class="comp-analogy">Like a lab courier who picks up your daily blood results and files them in the same cabinet as your other records — automatically, every time you sync.</div>
+        <div class="comp-tech">Tech: Whoop API v1/v2 · OAuth2 PKCE · httpx · local callback server</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: OAuth2 code → access token</span>
+          <span class="chip out">OUT: WhoopRecovery / WhoopCycle / SleepRecord / Workout nodes</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:#0f172a;">💬</div>
+          <div class="comp-name">Web Chat UI</div>
+        </div>
+        <div class="comp-job">A dark-themed single-page chat interface served by FastAPI at <code>http://127.0.0.1:8000</code>. Left sidebar shows person info, a live Whoop biometrics panel (recovery score, HRV, RHR, day strain, sleep performance), domain status, and quick-question buttons. The chat area renders AI answers as markdown with color-coded safety warnings. Conversation history persists across messages within a session and is cleared on "Clear chat".</div>
+        <div class="comp-analogy">Like a private health dashboard and AI assistant rolled into one — the biometric panel shows you how you are right now, and the chat lets you ask why.</div>
+        <div class="comp-tech">Tech: Vanilla JS · Tailwind CDN · marked.js · FastAPI StaticFiles</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: user message + conversation history</span>
+          <span class="chip out">OUT: markdown answer + Whoop live stats in sidebar</span>
         </div>
       </div>
 
@@ -932,9 +971,76 @@
     </div>
   </section>
 
-  <!-- ── E. STORAGE ── -->
-  <section id="storage">
+  <!-- ── E. WHOOP INTEGRATION ── -->
+  <section id="whoop">
     <div class="section-label">Section E</div>
+    <h2>Whoop Integration — Live Biometric Pipeline</h2>
+    <p style="color:var(--muted);margin-bottom:24px;">How data flows from your Whoop device into the knowledge graph and into AI answers.</p>
+
+    <div class="card">
+      <div class="flow-steps">
+
+        <div class="flow-step">
+          <div class="flow-num green">1</div>
+          <div class="flow-body">
+            <h4>⌚ OAuth2 Authentication</h4>
+            <p>Run <code>python scripts/whoop_sync.py auth</code>. The client starts a local HTTP server on port 8080, opens your browser to the Whoop authorization page, and captures the callback code via a thread-safe queue. Tokens are saved to <code>.whoop_tokens.json</code> (chmod 600). If the automatic callback fails, use <code>--code</code> to paste the redirect URL manually.</p>
+            <div class="flow-detail">
+              <span class="flow-chip g">Local callback server on :8080</span>
+              <span class="flow-chip g">queue.Queue for thread-safe code capture</span>
+              <span class="flow-chip g">Auto token refresh (60s buffer before expiry)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num green">2</div>
+          <div class="flow-body">
+            <h4>📡 API Sync (Mixed Versions)</h4>
+            <p>The Whoop API uses two base URLs: <code>/developer/v1</code> for daily cycles, and <code>/developer/v2</code> for recovery, sleep (<code>/activity/sleep</code>), and workouts (<code>/activity/workout</code>). The sync engine paginates all endpoints using <code>nextToken</code> cursors and writes results into the mapper.</p>
+            <div class="flow-detail">
+              <span class="flow-chip g">v1: /cycle</span>
+              <span class="flow-chip g">v2: /recovery</span>
+              <span class="flow-chip g">v2: /activity/sleep</span>
+              <span class="flow-chip g">v2: /activity/workout</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num green">3</div>
+          <div class="flow-body">
+            <h4>🗺️ Mapping → Graph Nodes</h4>
+            <p>The mapper translates Whoop API shapes into the internal schema. Each sync writes idempotent MERGE statements — re-syncing the same day never creates duplicates.</p>
+            <div class="flow-detail">
+              <span class="flow-chip g">WhoopRecovery: recovery_score, hrv_rmssd, resting_hr, spo2_pct</span>
+              <span class="flow-chip g">WhoopCycle: strain, calories, avg/max HR</span>
+              <span class="flow-chip g">SleepRecord (source=whoop): duration, deep/REM, performance %, efficiency %</span>
+              <span class="flow-chip g">Workout (source=whoop): type, strain_score, HR zones 1–5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num blue">4</div>
+          <div class="flow-body">
+            <h4>🧠 Context Injection at Query Time</h4>
+            <p>The graph retriever detects fitness keywords in the query (HRV, recovery, strain, sleep, workout, etc.) and fetches the last 14 days of Whoop nodes, formatting them as text lines prefixed with <code>=== Whoop Biometric Data ===</code>. The hybrid retriever prepends these verbatim to the AI context, ahead of other results, ensuring Claude always sees live biometric data for fitness questions.</p>
+            <div class="flow-detail">
+              <span class="flow-chip b">Keyword-triggered (no extra API call)</span>
+              <span class="flow-chip b">14-day window per query</span>
+              <span class="flow-chip b">Prepended ahead of document/entity results</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── F. STORAGE ── -->
+  <section id="storage">
+    <div class="section-label">Section F</div>
     <h2>Data Storage — What gets saved where?</h2>
     <p style="color:var(--muted);margin-bottom:24px;">Three places your data lives, each optimized for a different kind of question.</p>
 
@@ -948,6 +1054,7 @@
           <li><span class="what">Lab results, Vitals, Procedures</span><span class="why">timestamped to TimePoint nodes</span></li>
           <li><span class="what">Genetic risks, Pharmacogenes</span><span class="why">linked to conditions + medications</span></li>
           <li><span class="what">Mood, Sleep, Workouts</span><span class="why">cross-linked to each other</span></li>
+          <li><span class="what">WhoopRecovery, WhoopCycle nodes</span><span class="why">live biometrics synced from device</span></li>
           <li><span class="what">Drug-drug, supplement-drug edges</span><span class="why">safety-critical relationships</span></li>
           <li><span class="what">Domain + Vertical registry nodes</span><span class="why">self-describing graph</span></li>
         </ul>
@@ -976,6 +1083,8 @@
           <li><span class="what">data/uploads/healthcare/genetics/</span><span class="why">23andMe reports, PDFs</span></li>
           <li><span class="what">data/backups/</span><span class="why">AES-256 encrypted archives</span></li>
           <li><span class="what">data/neo4j/ + data/chroma_db/</span><span class="why">database files (gitignored)</span></li>
+          <li><span class="what">.whoop_tokens.json</span><span class="why">OAuth2 tokens, chmod 600, gitignored</span></li>
+          <li><span class="what">.whoop_sync_state.json</span><span class="why">last sync timestamp + counts</span></li>
         </ul>
       </div>
 
@@ -984,7 +1093,7 @@
 
   <!-- ── SAFETY ── -->
   <section id="safety">
-    <div class="section-label">Section F</div>
+    <div class="section-label">Section G</div>
     <h2>Safety System — Automatic Warnings</h2>
     <p style="color:var(--muted);margin-bottom:24px;">Every query runs a safety check before the AI answers. Warnings are injected into the AI's context so they always surface — even if you didn't ask.</p>
 
@@ -1018,7 +1127,7 @@
 
   <!-- ── CROSS-DOMAIN ── -->
   <section id="cross-domain">
-    <div class="section-label">Section G</div>
+    <div class="section-label">Section H</div>
     <h2>Cross-Domain Magic — The Real Value</h2>
     <p style="color:var(--muted);margin-bottom:8px;">These are the questions that make this system unique. No single-domain app can answer them.</p>
     <p style="color:var(--muted);margin-bottom:24px;">The first three require the finances and legal domains (planned). The healthcare queries work today.</p>
@@ -1061,12 +1170,27 @@
           <span class="qdomain hc">Healthcare: GeneticRisk → Condition → Procedure (by date)</span>
         </div>
       </div>
+      <div class="query-card" style="background:var(--green-light);border-color:#a7f3d0;">
+        <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:6px;">✅ WORKS TODAY (live Whoop data)</div>
+        <div class="query-q">My HRV has been dropping this week — is my training load too high, and how does my recovery score correlate with my sleep performance?</div>
+        <div class="query-domains">
+          <span class="qdomain hc">Fitness: WhoopRecovery (hrv_rmssd, recovery_score) + WhoopCycle (strain) + SleepRecord (performance_pct)</span>
+        </div>
+      </div>
+      <div class="query-card" style="background:var(--green-light);border-color:#a7f3d0;">
+        <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:6px;">✅ WORKS TODAY (cross-vertical)</div>
+        <div class="query-q">Does my CYP2D6 intermediate metabolizer status affect how my body processes any of my current medications, and what do my recent labs suggest about my metabolic health?</div>
+        <div class="query-domains">
+          <span class="qdomain hc">Genetics: Pharmacogene(CYP2D6) → Medication</span>
+          <span class="qdomain hc">Medical: LabResult(HbA1c, lipids)</span>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- ── DESIGN DECISIONS ── -->
   <section id="decisions">
-    <div class="section-label">Section H</div>
+    <div class="section-label">Section I</div>
     <h2>Why was it built this way?</h2>
     <p style="color:var(--muted);margin-bottom:24px;">Key architectural choices explained as cause-and-effect.</p>
 
@@ -1102,12 +1226,22 @@
         <p>Personal health records, genetic data, and financial history are <strong>the most sensitive data a person owns</strong>. Neo4j and ChromaDB run as local Docker containers. The FastAPI server listens only on localhost — it cannot be reached from any other machine on the network. The only data that leaves the machine is the question text + excerpts sent to the Claude API.</p>
       </div>
 
+      <div class="decision green">
+        <h4>Whoop biometrics injected at query time, not at ingest time</h4>
+        <p>Whoop data is already in Neo4j after each sync. Rather than re-embedding it into ChromaDB (which would make vector search noisy with numeric time-series data), the graph retriever <strong>directly fetches the last 14 days of biometric nodes</strong> when fitness keywords appear in the query. This keeps vector search for semantics and graph traversal for structured data — each doing what it does best.</p>
+      </div>
+
+      <div class="decision purple">
+        <h4>Conversation history passed as real message turns, not stuffed into the prompt</h4>
+        <p>A naive approach would concatenate prior Q&amp;A into the system prompt. Instead, prior turns are passed as actual <code>{"role": "user"}</code> / <code>{"role": "assistant"}</code> messages in the Anthropic messages array. This lets the model use its <strong>native multi-turn reasoning</strong> — it knows the difference between what it said and what you said, and can refer back naturally. History is capped at 10 messages to keep token usage bounded.</p>
+      </div>
+
     </div>
   </section>
 
   <!-- ── GLOSSARY ── -->
   <section id="glossary">
-    <div class="section-label">Section I</div>
+    <div class="section-label">Section J</div>
     <h2>Glossary — Words You Might Not Know</h2>
     <p style="color:var(--muted);margin-bottom:24px;">Every technical term used in this project, explained in plain English.</p>
 
@@ -1159,6 +1293,26 @@
       <div class="gloss-item">
         <div class="gloss-term">BaseDomain / BaseVertical</div>
         <div class="gloss-def">Abstract Python classes that define the contract every domain and vertical must follow. Like a job description — any new domain just needs to fill in the blanks and it plugs in automatically.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">HRV (Heart Rate Variability)</div>
+        <div class="gloss-def">The variation in time between consecutive heartbeats, measured in milliseconds. Higher HRV generally indicates better recovery and nervous system health. Whoop reports this as <code>hrv_rmssd</code>.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Strain (Whoop)</div>
+        <div class="gloss-def">A 0–21 scale measuring cardiovascular load for the day or a workout. A strain of 14+ is high exertion; below 10 is light activity. Stored in <code>WhoopCycle.strain</code> and <code>Workout.strain_score</code>.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Recovery Score (Whoop)</div>
+        <div class="gloss-def">A 0–100% daily readiness score based on HRV, resting heart rate, sleep performance, and SpO2. Green (67–100%) means ready to train; yellow (34–66%) means moderate; red (&lt;34%) means rest.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Multi-turn Conversation</div>
+        <div class="gloss-def">A conversation where the AI remembers what was said earlier. Enabled by passing prior Q&amp;A as message history to the Claude API, so follow-up questions like "and how does that compare to last week?" work without repeating context.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">OAuth2 PKCE</div>
+        <div class="gloss-def">A secure authorization flow for apps that can't keep secrets (like mobile apps). The Whoop integration uses a local HTTP server on port 8080 to capture the authorization code, then exchanges it for access + refresh tokens.</div>
       </div>
     </div>
   </section>
