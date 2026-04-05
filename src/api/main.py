@@ -313,6 +313,165 @@ async def cross_vertical_insights() -> dict[str, Any]:
     }
 
 
+# ── Whoop integration endpoints ──────────────────────────────────────────────
+
+class WhoopSyncRequest(BaseModel):
+    days: int = 30
+
+
+@app.get("/integrations/whoop/status", tags=["integrations"])
+async def whoop_status() -> dict[str, Any]:
+    """Connection status, profile info, and last sync summary."""
+    from src.integrations.whoop.sync import WhoopSync
+    try:
+        syncer = WhoopSync(_neo4j())
+        return syncer.get_status()
+    except Exception as e:
+        return {"connected": False, "error": str(e)}
+
+
+@app.post("/integrations/whoop/sync", tags=["integrations"])
+async def whoop_sync(req: WhoopSyncRequest = WhoopSyncRequest()) -> dict[str, Any]:
+    """Trigger a Whoop sync. Fetches the last `days` days of data."""
+    from src.integrations.whoop.sync import WhoopSync
+    try:
+        syncer = WhoopSync(_neo4j(), _vector())
+        result = syncer.run(days=req.days)
+        # Re-run cross-vertical linker after ingesting new data
+        try:
+            _hc_linker().run_all_links()
+        except Exception as e:
+            logger.warning("Linker error after Whoop sync (non-fatal): %s", e)
+        return result
+    except RuntimeError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/healthcare/fitness/recovery", tags=["healthcare"])
+async def recovery_trends(
+    days: int = Query(30, description="Number of days to look back"),
+) -> dict[str, Any]:
+    """HRV, resting heart rate, and recovery score trends from Whoop."""
+    from datetime import date, timedelta
+    cutoff = (date.today() - timedelta(days=days)).isoformat()
+    results = _neo4j().run_query(
+        """
+        MATCH (p:Person {id: 'primary'})-[:HAS_RECOVERY]->(r:WhoopRecovery)
+        WHERE r.date >= $cutoff
+        RETURN r.date AS date, r.recovery_score AS recovery_score,
+               r.hrv_rmssd AS hrv_rmssd, r.resting_hr AS resting_hr,
+               r.spo2_pct AS spo2_pct, r.skin_temp_celsius AS skin_temp_celsius
+        ORDER BY r.date DESC
+        """,
+        {"cutoff": cutoff},
+    )
+    avg_hrv = (
+        round(sum(r["hrv_rmssd"] for r in results if r["hrv_rmssd"]) / len(results), 1)
+        if results else 0
+    )
+    avg_rhr = (
+        round(sum(r["resting_hr"] for r in results if r["resting_hr"]) / len(results), 1)
+        if results else 0
+    )
+    avg_recovery = (
+        round(sum(r["recovery_score"] for r in results if r["recovery_score"]) / len(results), 1)
+        if results else 0
+    )
+    return {
+        "days": days,
+        "records": results,
+        "count": len(results),
+        "averages": {
+            "hrv_rmssd": avg_hrv,
+            "resting_hr": avg_rhr,
+            "recovery_score": avg_recovery,
+        },
+    }
+
+
+@app.get("/healthcare/fitness/strain", tags=["healthcare"])
+async def strain_trends(
+    days: int = Query(30, description="Number of days to look back"),
+) -> dict[str, Any]:
+    """Daily strain scores and workout load from Whoop."""
+    from datetime import date, timedelta
+    cutoff = (date.today() - timedelta(days=days)).isoformat()
+    cycles = _neo4j().run_query(
+        """
+        MATCH (p:Person {id: 'primary'})-[:HAS_WHOOP_CYCLE]->(c:WhoopCycle)
+        WHERE c.date >= $cutoff
+        RETURN c.date AS date, c.strain AS strain, c.calories AS calories,
+               c.avg_heart_rate AS avg_heart_rate, c.max_heart_rate AS max_heart_rate
+        ORDER BY c.date DESC
+        """,
+        {"cutoff": cutoff},
+    )
+    workouts = _neo4j().run_query(
+        """
+        MATCH (p:Person {id: 'primary'})-[:HAS_WORKOUT]->(w:Workout)
+        WHERE w.source = 'whoop' AND w.date >= $cutoff
+        RETURN w.date AS date, w.type AS type, w.strain_score AS strain_score,
+               w.duration_mins AS duration_mins, w.calories_burned AS calories_burned,
+               w.avg_heart_rate AS avg_heart_rate, w.max_heart_rate AS max_heart_rate
+        ORDER BY w.date DESC
+        """,
+        {"cutoff": cutoff},
+    )
+    avg_strain = (
+        round(sum(c["strain"] for c in cycles if c["strain"]) / len(cycles), 1)
+        if cycles else 0
+    )
+    return {
+        "days": days,
+        "daily_cycles": cycles,
+        "workouts": workouts,
+        "averages": {"daily_strain": avg_strain},
+    }
+
+
+@app.get("/healthcare/fitness/sleep", tags=["healthcare"])
+async def sleep_trends(
+    days: int = Query(30, description="Number of days to look back"),
+) -> dict[str, Any]:
+    """Sleep performance, HRV-linked sleep quality, and stage breakdown from Whoop."""
+    from datetime import date, timedelta
+    cutoff = (date.today() - timedelta(days=days)).isoformat()
+    results = _neo4j().run_query(
+        """
+        MATCH (p:Person {id: 'primary'})-[:HAS_SLEEP_RECORD]->(sr:SleepRecord)
+        WHERE sr.date >= $cutoff AND sr.source = 'whoop'
+        RETURN sr.date AS date, sr.duration_hours AS duration_hours,
+               sr.deep_sleep_hours AS deep_sleep_hours, sr.rem_hours AS rem_hours,
+               sr.light_sleep_hours AS light_sleep_hours,
+               sr.sleep_performance_pct AS sleep_performance_pct,
+               sr.sleep_efficiency_pct AS sleep_efficiency_pct,
+               sr.respiratory_rate AS respiratory_rate,
+               sr.cycle_count AS cycle_count, sr.disturbances AS disturbances
+        ORDER BY sr.date DESC
+        """,
+        {"cutoff": cutoff},
+    )
+    avg_perf = (
+        round(sum(r["sleep_performance_pct"] for r in results if r["sleep_performance_pct"]) / len(results), 1)
+        if results else 0
+    )
+    avg_dur = (
+        round(sum(r["duration_hours"] for r in results if r["duration_hours"]) / len(results), 2)
+        if results else 0
+    )
+    return {
+        "days": days,
+        "records": results,
+        "count": len(results),
+        "averages": {
+            "sleep_performance_pct": avg_perf,
+            "duration_hours": avg_dur,
+        },
+    }
+
+
 # ── Planned domain stubs ──────────────────────────────────────────────────────
 
 PLANNED_MSG = "This domain is planned but not yet implemented. See src/domains/{domain}/PLANNED.md for the roadmap."

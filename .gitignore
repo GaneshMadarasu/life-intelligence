@@ -15,3 +15,7 @@ venv/
 .pytest_cache/
 *.log
 node_modules/
+
+# Whoop integration tokens (contains OAuth credentials)
+.whoop_tokens.json
+.whoop_sync_state.json
