@@ -1,60 +1,61 @@
-"""Finances domain — stub. See PLANNED.md for the implementation roadmap."""
+"""Finances domain — banking, investments, insurance, and taxes."""
 
 from __future__ import annotations
 
 from src.domains.base_domain import BaseDomain
+from src.core.document_loader import DocumentLoader
+from src.core.chunker import SmartChunker
 
 
 class FinancesDomain(BaseDomain):
     domain_name = "finances"
-    domain_description = "Banking, investments, insurance, and tax records."
+    domain_description = (
+        "Personal financial records — bank accounts, investments, insurance policies, and taxes."
+    )
 
     def _init_verticals(self) -> list:
-        return []  # No verticals implemented yet
+        from src.domains.finances.loaders import (
+            BankingVertical, InvestmentsVertical, InsuranceVertical, TaxesVertical
+        )
+        loader = DocumentLoader()
+        chunker = SmartChunker()
+        args = (self.neo4j, self.vector_store, loader, chunker)
+        return [
+            BankingVertical(*args),
+            InvestmentsVertical(*args),
+            InsuranceVertical(*args),
+            TaxesVertical(*args),
+        ]
 
     def get_all_node_types(self) -> list[str]:
         return [
-            "BankAccount", "Transaction", "Investment",
-            "InsurancePlan", "TaxReturn", "Expense", "Benefit",
+            "FinancialAccount", "Transaction", "Investment",
+            "InsurancePlan", "TaxItem", "Debt",
         ]
 
     def get_all_relationship_types(self) -> list[str]:
-        return ["HAS_ACCOUNT", "HAS_TRANSACTION", "HAS_INVESTMENT",
-                "HAS_INSURANCE", "HAS_TAX_RETURN", "HAS_EXPENSE", "HAS_BENEFIT"]
+        return [
+            "HAS_ACCOUNT", "HAS_TRANSACTION", "HAS_INVESTMENT",
+            "HAS_INSURANCE", "HAS_TAX_ITEM", "HAS_DEBT",
+        ]
 
     def get_cross_domain_hints(self) -> dict:
         return {
             "healthcare": {
-                "description": "Insurance covers conditions; HSA funds medications",
+                "description": "Health insurance coverage for conditions and medications",
                 "link_types": [
-                    "(InsurancePlan)-[:COVERS]->(Condition)",
-                    "(Benefit {type:HSA})-[:FUNDS]->(Medication)",
-                    "(InsurancePlan)-[:PAYS_CLAIM_FOR]->(Hospitalization)",
+                    "(InsurancePlan {type:health})-[:COVERS]->(Condition)",
+                    "(InsurancePlan {type:health})-[:COVERS]->(Medication)",
                 ],
             },
             "legal-contracts": {
-                "description": "Employment contracts specify compensation and benefits",
+                "description": "Employment contracts referencing benefits and insurance",
                 "link_types": [
-                    "(Contract)-[:SPECIFIES_COMPENSATION]->(Transaction)",
-                    "(Obligation)-[:TRIGGERS]->(Expense)",
+                    "(Contract)-[:INCLUDES_BENEFIT]->(InsurancePlan)",
                 ],
             },
         }
 
-    def ingest(self, file_path: str, vertical: str) -> dict:
-        raise NotImplementedError(
-            "The finances domain is planned but not yet implemented. "
-            "See src/domains/finances/PLANNED.md for the roadmap."
-        )
-
     def get_cypher_templates(self) -> dict[str, str]:
-        return {}
-
-    def get_status(self) -> dict:
-        return {
-            "domain": self.domain_name,
-            "description": self.domain_description,
-            "status": "planned",
-            "verticals": ["banking", "investments", "insurance", "taxes"],
-            "stats": {"document_count": 0},
-        }
+        from src.domains.finances.queries import QUERIES
+        return QUERIES

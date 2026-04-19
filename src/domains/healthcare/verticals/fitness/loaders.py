@@ -24,6 +24,31 @@ class FitnessVertical(BaseVertical):
         self._extractor = FitnessExtractor()
         self._graph_builder = FitnessGraphBuilder(neo4j_client)
 
+    def ingest(self, file_path: str) -> dict[str, Any]:
+        """Override to handle Apple Health XML specially."""
+        if file_path.endswith("export.xml") or (
+            file_path.endswith(".xml") and "apple" in file_path.lower()
+        ):
+            return self._ingest_apple_health(file_path)
+        return super().ingest(file_path)
+
+    def _ingest_apple_health(self, file_path: str) -> dict[str, Any]:
+        from src.domains.healthcare.verticals.fitness.apple_health import (
+            parse_apple_health_export, AppleHealthGraphBuilder
+        )
+        logger.info("Detected Apple Health XML export — using specialised parser")
+        parsed = parse_apple_health_export(file_path)
+        builder = AppleHealthGraphBuilder(self.neo4j)
+        doc_id = builder.build(parsed, file_path)
+        return {
+            "domain": self.domain_name,
+            "vertical": self.vertical_name,
+            "doc_id": doc_id,
+            "source": "apple_health",
+            "summary": parsed.get("summary", {}),
+            "workout_count": parsed.get("workout_count", 0),
+        }
+
     def extract(self, text: str, metadata: dict) -> dict[str, Any]:
         return self._extractor.extract(text, metadata)
 

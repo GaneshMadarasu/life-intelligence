@@ -12,7 +12,7 @@ neo4j==5.16.0
 chromadb==0.4.22
 
 # AI
-anthropic==0.40.0
+anthropic>=0.40.0
 
 # Document Processing
 pdfplumber==0.10.3
@@ -34,6 +34,14 @@ rich==13.7.0
 
 # Integrations
 httpx==0.26.0
+
+# Scheduling (Whoop auto-sync)
+apscheduler==3.10.4
+
+# Google Calendar integration (optional)
+google-api-python-client==2.116.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
 
 # Testing
 pytest==7.4.4
