@@ -117,6 +117,11 @@ class GCalSyncRequest(BaseModel):
     days_ahead: int = 90
     days_back: int = 30
 
+class GmailSyncRequest(BaseModel):
+    days_back: int = 90
+    domains: list[str] = []   # empty = all domains
+    extract_entities: bool = True
+
 
 # ── Domain management ─────────────────────────────────────────────────────────
 
@@ -800,6 +805,82 @@ async def gcal_upcoming(days: int = Query(14)) -> dict[str, Any]:
         return {"events": events, "count": len(events)}
     except Exception as e:
         return {"events": [], "count": 0, "error": str(e)}
+
+
+# ── Gmail integration endpoints ────────────────────────────────────────────���─
+
+def _gmail_syncer(with_claude: bool = False):
+    from src.integrations.gmail.sync import GmailSync
+    anthropic_client = None
+    if with_claude:
+        try:
+            import anthropic
+            anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        except Exception:
+            pass
+    return GmailSync(_neo4j(), anthropic_client)
+
+
+@app.get("/integrations/gmail/status", tags=["integrations"])
+async def gmail_status() -> dict[str, Any]:
+    """Gmail connection status and ingested email counts."""
+    try:
+        return await _run_sync(_gmail_syncer().get_status)
+    except Exception as e:
+        return {"authenticated": False, "error": str(e)}
+
+
+@app.post("/integrations/gmail/sync", tags=["integrations"])
+async def gmail_sync(req: GmailSyncRequest = GmailSyncRequest()) -> dict[str, Any]:
+    """Sync domain-relevant emails from Gmail into the knowledge graph."""
+    def _do():
+        syncer = _gmail_syncer(with_claude=req.extract_entities)
+        return syncer.run(
+            days_back=req.days_back,
+            domains=req.domains or None,
+            extract_entities=req.extract_entities,
+        )
+    try:
+        return await _run_sync(_do)
+    except RuntimeError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/integrations/gmail/emails", tags=["integrations"])
+async def gmail_emails(
+    domain: str | None = Query(None, description="healthcare | finances | career | general"),
+    days: int | None = Query(None, description="Only show emails from last N days"),
+    limit: int = Query(50, le=200),
+) -> dict[str, Any]:
+    """List ingested emails from the graph, optionally filtered by domain."""
+    try:
+        emails = await _run_sync(
+            _gmail_syncer().get_emails,
+            domain,
+            limit,
+            days,
+        )
+        return {"emails": emails, "count": len(emails)}
+    except Exception as e:
+        return {"emails": [], "count": 0, "error": str(e)}
+
+
+@app.post("/integrations/gmail/search", tags=["integrations"])
+async def gmail_search(
+    q: str = Query(..., description="Gmail search query (same syntax as Gmail search bar)"),
+    domain: str = Query("general"),
+) -> dict[str, Any]:
+    """Ad-hoc Gmail search — ingest any emails matching the query."""
+    def _do():
+        return _gmail_syncer(with_claude=True).search_and_ingest(q, domain=domain)
+    try:
+        return await _run_sync(_do)
+    except RuntimeError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── Planned domain stubs ──────────────────────────────────────────────────────

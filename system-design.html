@@ -415,6 +415,7 @@
       <span class="badge active">✅ Whoop Live Biometrics</span>
       <span class="badge active">✅ Apple Health XML</span>
       <span class="badge active">✅ Google Calendar</span>
+      <span class="badge active">✅ Gmail Integration</span>
       <span class="badge active">✅ MCP Server</span>
       <span class="badge active">✅ SSE Streaming</span>
       <span class="badge active">✅ Prompt Caching</span>
@@ -1041,6 +1042,20 @@
 
       <div class="comp-card">
         <div class="comp-header">
+          <div class="comp-icon" style="background:var(--red-light);">📧</div>
+          <div class="comp-name">Gmail Integration</div>
+        </div>
+        <div class="comp-job">OAuth2 read-only client for the Gmail API. Fetches emails using domain-specific search queries (appointment/lab/prescription → healthcare; invoice/tax/bank → finances; offer letter/review → career). Uses Claude to extract structured entities from each email body — appointment dates, amounts, company names, action items. Writes Email nodes with snippet + extracted_entities JSON to Neo4j.</div>
+        <div class="comp-analogy">Like a smart mail sorter who reads every envelope, files it in the right folder, and writes a sticky note on each one saying "this has a lab result from 2024-03-15 — action required."</div>
+        <div class="comp-tech">Tech: Gmail API v1 · google-auth-oauthlib · base64 MIME decode · Claude entity extraction · Email nodes</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: OAuth2 code → gmail.readonly token</span>
+          <span class="chip out">OUT: Email nodes · HAS_EMAIL edges · extracted_entities JSON</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
           <div class="comp-icon" style="background:var(--blue-light);">📅</div>
           <div class="comp-name">Google Calendar Sync</div>
         </div>
@@ -1171,6 +1186,7 @@
           <li><span class="what">FinancialAccount, Investment, InsurancePlan, Debt</span><span class="why">finances domain nodes</span></li>
           <li><span class="what">Job, Skill, Education, Certification</span><span class="why">career domain nodes</span></li>
           <li><span class="what">CalendarEvent nodes</span><span class="why">Google Calendar sync</span></li>
+          <li><span class="what">Email nodes (subject, sender, snippet, entities)</span><span class="why">Gmail sync — read-only</span></li>
           <li><span class="what">Drug-drug, supplement-drug edges</span><span class="why">safety-critical relationships</span></li>
           <li><span class="what">Domain + Vertical registry nodes</span><span class="why">self-describing graph (30+ node types)</span></li>
         </ul>
@@ -1203,6 +1219,7 @@
           <li><span class="what">data/neo4j/ + data/chroma_db/</span><span class="why">database files (gitignored)</span></li>
           <li><span class="what">.whoop_tokens.json</span><span class="why">OAuth2 tokens, chmod 600, gitignored</span></li>
           <li><span class="what">.gcal_tokens.json</span><span class="why">Google Calendar OAuth2 tokens, gitignored</span></li>
+          <li><span class="what">.gmail_tokens.json</span><span class="why">Gmail OAuth2 tokens (read-only), gitignored</span></li>
           <li><span class="what">.whoop_sync_state.json</span><span class="why">last sync timestamp + counts</span></li>
           <li><span class="what">credentials.json</span><span class="why">Google Cloud OAuth2 app credentials</span></li>
         </ul>

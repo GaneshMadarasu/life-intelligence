@@ -53,8 +53,9 @@ The magic is **cross-domain intelligence**: asking questions that no single-doma
           │
     ┌─────▼──────────────────────────────────────┐
     │  src/integrations/                         │
-    │  ├── whoop/   OAuth2 · sync · biometrics   │
-    │  └── google_calendar/  OAuth2 · CalEvents  │
+    │  ├── whoop/         OAuth2 · biometrics    │
+    │  ├── google_calendar/  OAuth2 · CalEvents  │
+    │  └── gmail/         OAuth2 · Email nodes   │
     └─────┬──────────────────────────────────────┘
           │
     ┌─────▼──────────────────────────────────────┐
@@ -213,6 +214,67 @@ python scripts/ingest.py \
 | Blood glucose | `LabResult` |
 | Sleep analysis (asleep vs in-bed) | `SleepRecord` |
 | Workouts (type, duration, calories, distance) | `Workout` |
+
+## Gmail Integration
+
+Reads domain-relevant emails (healthcare, finances, career) from your Gmail inbox, extracts structured entities with Claude, and writes them as `Email` nodes in the graph.
+
+### Setup
+
+1. In **Google Cloud Console**, open your existing project (same one used for Google Calendar)
+2. **Enable Gmail API** (APIs & Services → Enable APIs → Gmail API)
+3. Edit your OAuth2 credentials to include `gmail.readonly` scope, then re-download `client_secret.json`
+
+```bash
+# First-time OAuth2 login
+python scripts/gmail_sync.py auth
+
+# Complete OAuth2 with the code from the redirect URL
+python scripts/gmail_sync.py auth-complete --code "YOUR_CODE_HERE"
+
+# Sync last 90 days (all domains, Claude entity extraction on)
+python scripts/gmail_sync.py sync
+
+# Sync only healthcare emails, last 30 days
+python scripts/gmail_sync.py sync --days 30 --domain healthcare
+
+# Ad-hoc search with any Gmail query
+python scripts/gmail_sync.py search --query "lab results" --domain healthcare
+
+# View ingested emails
+python scripts/gmail_sync.py emails --domain finances --days 30
+
+# Check connection status + counts
+python scripts/gmail_sync.py status
+```
+
+### What Gets Ingested
+
+| Domain | Email patterns matched |
+|--------|----------------------|
+| **Healthcare** | Lab results, appointment confirmations, prescription notices, insurance EOBs, referrals, test results |
+| **Finances** | Bank statements, invoices, payment receipts, tax documents (W-2, 1099), insurance renewals, bills |
+| **Career** | Offer letters, interview invites, performance reviews, salary/promotion emails, contract documents |
+
+Each email becomes an `Email` node with subject, sender, date, domain, snippet, and a `extracted_entities` JSON field populated by Claude (appointment dates, amounts, company names, action items, etc.).
+
+### Gmail API Endpoints
+
+```bash
+# Connection status + ingested email counts
+curl http://127.0.0.1:8000/integrations/gmail/status
+
+# Sync emails (POST)
+curl -X POST http://127.0.0.1:8000/integrations/gmail/sync \
+  -H "Content-Type: application/json" \
+  -d '{"days_back": 90, "extract_entities": true}'
+
+# List ingested emails by domain
+curl "http://127.0.0.1:8000/integrations/gmail/emails?domain=healthcare&days=30"
+
+# Ad-hoc search
+curl "http://127.0.0.1:8000/integrations/gmail/search?q=lab+results&domain=healthcare"
+```
 
 ## Google Calendar Integration
 
@@ -443,6 +505,8 @@ python scripts/backup.py restore data/backups/life-intel-backup-20240101_120000.
 | **No cloud sync** | Everything runs locally; Claude API receives only your question + context excerpts |
 | **Whoop tokens** | OAuth2 tokens saved to `.whoop_tokens.json` (chmod 600), gitignored |
 | **GCal tokens** | OAuth2 tokens saved to `.gcal_tokens.json` (chmod 600), gitignored |
+| **Gmail tokens** | OAuth2 tokens saved to `.gmail_tokens.json` (chmod 600), gitignored |
+| **Gmail scope** | Read-only (`gmail.readonly`) — the system never sends, modifies, or deletes emails |
 
 ## Neo4j Node Types
 
@@ -455,7 +519,7 @@ python scripts/backup.py restore data/backups/life-intel-backup-20240101_120000.
 | Genetics | `Gene`, `GeneticVariant`, `GeneticRisk`, `Pharmacogene`, `GeneticReport`, `AncestrySegment` |
 | Finances | `FinancialAccount`, `Transaction`, `Investment`, `InsurancePlan`, `TaxItem`, `Debt` |
 | Career | `Job`, `Skill`, `Education`, `Certification`, `Achievement`, `Project` |
-| Integrations | `CalendarEvent` |
+| Integrations | `CalendarEvent`, `Email` |
 
 ## Example Cross-Domain Queries
 
@@ -515,8 +579,10 @@ life-intelligence/
 │   │   │   ├── client.py       # OAuth2 client + auto token refresh
 │   │   │   ├── mapper.py       # Whoop API → graph schema
 │   │   │   └── sync.py         # Orchestrates fetch + ingest
-│   │   └── google_calendar/
-│   │       └── sync.py         # OAuth2 · event sync · CalendarEvent nodes
+│   │   ├── google_calendar/
+│   │   │   └── sync.py         # OAuth2 · event sync · CalendarEvent nodes
+│   │   └── gmail/
+│   │       └── sync.py         # OAuth2 · email fetch · Claude extraction · Email nodes
 │   ├── retrieval/              # Hybrid graph + vector retrieval
 │   │   ├── graph_retriever.py  # Cypher search + Whoop biometric injection
 │   │   ├── vector_retriever.py # ChromaDB semantic search
@@ -533,6 +599,7 @@ life-intelligence/
 │   ├── query.py                # CLI: ask anything
 │   ├── whoop_sync.py           # CLI: Whoop auth / sync / status
 │   ├── gcal_sync.py            # CLI: Google Calendar auth / sync / upcoming
+│   ├── gmail_sync.py           # CLI: Gmail auth / sync / search / emails
 │   ├── backup.py               # AES-256 encrypted backup
 │   └── seed_data/
 │       └── seed_ganesh_healthcare.py  # Synthetic health history for Ganesh
