@@ -393,7 +393,7 @@
     <li><a href="#diagram">Architecture</a></li>
     <li><a href="#dataflow">Data Flow</a></li>
     <li><a href="#components">Components</a></li>
-    <li><a href="#whoop">Whoop Integration</a></li>
+    <li><a href="#whoop">Whoop</a></li>
     <li><a href="#storage">Storage</a></li>
     <li><a href="#safety">Safety</a></li>
     <li><a href="#cross-domain">Cross-Domain</a></li>
@@ -410,11 +410,15 @@
     <p>A private, locally-run knowledge graph that unifies your entire life — health records, finances, legal contracts, career history — so you can ask questions no single app could ever answer.</p>
     <div class="badges">
       <span class="badge active">✅ Healthcare — Active</span>
+      <span class="badge active">✅ Finances — Active</span>
+      <span class="badge active">✅ Career — Active</span>
       <span class="badge active">✅ Whoop Live Biometrics</span>
-      <span class="badge active">✅ Web UI — Chat Interface</span>
-      <span class="badge">🔜 Finances</span>
+      <span class="badge active">✅ Apple Health XML</span>
+      <span class="badge active">✅ Google Calendar</span>
+      <span class="badge active">✅ MCP Server</span>
+      <span class="badge active">✅ SSE Streaming</span>
+      <span class="badge active">✅ Prompt Caching</span>
       <span class="badge">🔜 Legal Contracts</span>
-      <span class="badge">🔜 Career</span>
       <span class="badge">🔜 Relationships</span>
       <span class="badge">Python 3.11</span>
       <span class="badge">FastAPI</span>
@@ -464,18 +468,18 @@
             </tr>
             <tr>
               <td><strong>Finances</strong></td>
-              <td><span class="status-planned">🔜 Planned</span></td>
+              <td><span class="status-active">● Active</span></td>
               <td>banking, investments, insurance, taxes</td>
+            </tr>
+            <tr>
+              <td><strong>Career</strong></td>
+              <td><span class="status-active">● Active</span></td>
+              <td>employment-history, skills, education</td>
             </tr>
             <tr>
               <td><strong>Legal Contracts</strong></td>
               <td><span class="status-planned">🔜 Planned</span></td>
               <td>employment, property, policies</td>
-            </tr>
-            <tr>
-              <td><strong>Career</strong></td>
-              <td><span class="status-planned">🔜 Planned</span></td>
-              <td>jobs, skills, education</td>
             </tr>
             <tr>
               <td><strong>Relationships</strong></td>
@@ -486,9 +490,17 @@
         </table>
 
         <div style="margin-top:20px;padding:14px;background:var(--green-light);border:1px solid #a7f3d0;border-radius:8px;">
-          <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;">Healthcare Nodes (Seeded)</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;">Healthcare Nodes</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
             <span class="chip">Condition</span><span class="chip">Medication</span><span class="chip">Supplement</span><span class="chip">LabResult</span><span class="chip">Vital</span><span class="chip">Allergy</span><span class="chip">Procedure</span><span class="chip">Vaccine</span><span class="chip">Hospitalization</span><span class="chip">Workout</span><span class="chip">Meal</span><span class="chip">BodyMetric</span><span class="chip">SleepRecord</span><span class="chip" style="border-color:#6ee7b7;background:#064e3b22;color:#6ee7b7;">WhoopRecovery ⚡</span><span class="chip" style="border-color:#6ee7b7;background:#064e3b22;color:#6ee7b7;">WhoopCycle ⚡</span><span class="chip">MoodEntry</span><span class="chip">TherapySession</span><span class="chip">Stressor</span><span class="chip">JournalEntry</span><span class="chip">MeditationSession</span><span class="chip">Gene</span><span class="chip">GeneticRisk</span><span class="chip">Pharmacogene</span><span class="chip">AncestrySegment</span>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;">Finances Nodes</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+            <span class="chip in">FinancialAccount</span><span class="chip in">Transaction</span><span class="chip in">Investment</span><span class="chip in">InsurancePlan</span><span class="chip in">TaxItem</span><span class="chip in">Debt</span>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px;">Career Nodes</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="chip out">Job</span><span class="chip out">Skill</span><span class="chip out">Education</span><span class="chip out">Certification</span><span class="chip out">Achievement</span><span class="chip out">Project</span>
           </div>
         </div>
       </div>
@@ -611,12 +623,29 @@
             <div class="vbox"><div class="vbox-title">🧬 Genetics</div><div class="vbox-desc">risks, pharmacogenes, ancestry</div></div>
           </div>
         </div>
-        <!-- Planned stubs -->
+        <!-- Active: Finances -->
+        <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);border-radius:12px;padding:14px 18px;min-width:180px;">
+          <div style="font-size:12px;font-weight:700;color:#93c5fd;margin-bottom:8px;">✅ Finances</div>
+          <div class="verticals-row" style="flex-direction:column;gap:4px;">
+            <div class="vbox" style="background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);"><div class="vbox-title" style="color:#93c5fd;">🏦 Banking</div><div class="vbox-desc">accounts, transactions, debts</div></div>
+            <div class="vbox" style="background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);"><div class="vbox-title" style="color:#93c5fd;">📈 Investments</div><div class="vbox-desc">stocks, funds, portfolio</div></div>
+            <div class="vbox" style="background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);"><div class="vbox-title" style="color:#93c5fd;">🛡️ Insurance</div><div class="vbox-desc">plans, premiums, coverage</div></div>
+            <div class="vbox" style="background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);"><div class="vbox-title" style="color:#93c5fd;">🧾 Taxes</div><div class="vbox-desc">income, deductions, W-2</div></div>
+          </div>
+        </div>
+        <!-- Active: Career -->
+        <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:14px 18px;min-width:180px;">
+          <div style="font-size:12px;font-weight:700;color:#c4b5fd;margin-bottom:8px;">✅ Career</div>
+          <div class="verticals-row" style="flex-direction:column;gap:4px;">
+            <div class="vbox" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);"><div class="vbox-title" style="color:#c4b5fd;">💼 Employment</div><div class="vbox-desc">jobs, roles, salaries</div></div>
+            <div class="vbox" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);"><div class="vbox-title" style="color:#c4b5fd;">🛠️ Skills</div><div class="vbox-desc">technical, proficiency levels</div></div>
+            <div class="vbox" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);"><div class="vbox-title" style="color:#c4b5fd;">🎓 Education</div><div class="vbox-desc">degrees, certs, achievements</div></div>
+          </div>
+        </div>
+        <!-- Stubs -->
         <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;">
-          <div class="sbox" style="min-width:140px;"><div class="sbox-title">💰 Finances</div><div class="sbox-label">🔜 planned</div></div>
-          <div class="sbox" style="min-width:140px;"><div class="sbox-title">⚖️ Legal</div><div class="sbox-label">🔜 planned</div></div>
-          <div class="sbox" style="min-width:140px;"><div class="sbox-title">💼 Career</div><div class="sbox-label">🔜 planned</div></div>
-          <div class="sbox" style="min-width:140px;"><div class="sbox-title">👥 Relationships</div><div class="sbox-label">🔜 planned</div></div>
+          <div class="sbox" style="min-width:130px;"><div class="sbox-title">⚖️ Legal</div><div class="sbox-label">🔜 planned</div></div>
+          <div class="sbox" style="min-width:130px;"><div class="sbox-title">👥 Relationships</div><div class="sbox-label">🔜 planned</div></div>
         </div>
         <!-- Cross-domain linker -->
         <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px 18px;min-width:180px;display:flex;align-items:center;">
@@ -968,6 +997,90 @@
         </div>
       </div>
 
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--red-light);">🔔</div>
+          <div class="comp-name">Alerts Engine</div>
+        </div>
+        <div class="comp-job">Runs automatically on every query. Checks for HRV 3-day decline, red-zone recovery streaks, lab results overdue >12 months, certifications expiring in 90 days, insurance renewals in 60 days, and drug-drug interactions. Results surface in the sidebar and via GET /alerts.</div>
+        <div class="comp-analogy">Like a smoke detector for your health, finances, and career — always on in the background, silent when all is well, loud when something needs attention.</div>
+        <div class="comp-tech">Tech: FastAPI endpoint · Neo4j Cypher · APScheduler</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: (reads live graph)</span>
+          <span class="chip out">OUT: {high: [], medium: [], low: []}</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--purple-light);">🔌</div>
+          <div class="comp-name">MCP Server</div>
+        </div>
+        <div class="comp-job">A JSON-RPC 2.0 server over stdin/stdout that exposes the knowledge graph as tools to Claude Desktop. Implements the Model Context Protocol — 6 tools: life_query, life_me, life_timeline, life_alerts, life_safety, life_whoop_today. Calls the local FastAPI internally via httpx.</div>
+        <div class="comp-analogy">Like a USB adapter — it lets Claude Desktop plug directly into your private life-intelligence system using a standard connector.</div>
+        <div class="comp-tech">Tech: JSON-RPC 2.0 · stdin/stdout · httpx · MCP Protocol</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: JSON-RPC tool call from Claude Desktop</span>
+          <span class="chip out">OUT: JSON-RPC tool result</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--green-light);">🍎</div>
+          <div class="comp-name">Apple Health Ingestion</div>
+        </div>
+        <div class="comp-job">Parses Apple Health's export.xml (stdlib only — no external dependencies) and ingests steps, heart rate, resting HR, SpO2, VO2Max, respiratory rate, body weight, blood glucose, sleep analysis, and workouts. Daily aggregation prevents graph flooding. Detects export.xml or "apple" in filename and auto-routes.</div>
+        <div class="comp-analogy">Like a translator who speaks Apple's proprietary language and converts it into the same vocabulary every other health source uses.</div>
+        <div class="comp-tech">Tech: xml.etree.ElementTree (stdlib) · daily aggregation · MERGE</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: Apple Health export.xml</span>
+          <span class="chip out">OUT: Vital / BodyMetric / SleepRecord / Workout nodes</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--blue-light);">📅</div>
+          <div class="comp-name">Google Calendar Sync</div>
+        </div>
+        <div class="comp-job">OAuth2 client for the Google Calendar API. Syncs events, classifies them by domain using keyword matching (health/appointment/doctor → healthcare; bank/budget/tax → finances), and writes CalendarEvent nodes linked to the Person. Token refresh is automatic.</div>
+        <div class="comp-analogy">Like a secretary who reads your calendar and files each appointment in the right folder — medical events with your health records, financial meetings with your accounts.</div>
+        <div class="comp-tech">Tech: google-auth-oauthlib · Google Calendar API v3 · CalendarEvent nodes</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: OAuth2 code → access token</span>
+          <span class="chip out">OUT: CalendarEvent nodes · HAS_CALENDAR_EVENT edges</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--orange-light);">⏰</div>
+          <div class="comp-name">Background Scheduler (APScheduler)</div>
+        </div>
+        <div class="comp-job">Runs a BackgroundScheduler with an IntervalTrigger every 6 hours to automatically sync Whoop biometrics. Starts with the FastAPI app and shuts down cleanly on exit. Keeps biometric data fresh without any manual intervention.</div>
+        <div class="comp-analogy">Like setting an alarm clock that quietly syncs your health data while you sleep — you never think about it, but it's always current.</div>
+        <div class="comp-tech">Tech: APScheduler 3.10 · BackgroundScheduler · IntervalTrigger(hours=6)</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: (scheduler tick every 6 hours)</span>
+          <span class="chip out">OUT: Whoop nodes updated silently</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-header">
+          <div class="comp-icon" style="background:var(--purple-light);">⚡</div>
+          <div class="comp-name">Answer Cache + Prompt Caching</div>
+        </div>
+        <div class="comp-job">Two-layer caching strategy. (1) Semantic cache: SHA-256 keyed in-memory dict with TTL (configurable via ANSWER_CACHE_TTL env var). Skipped when conversation history is active. (2) Anthropic prompt caching: cache_control ephemeral on the system block + anthropic-beta header — caches the ~2 KB system prompt across calls, saving ~80% of system-prompt tokens.</div>
+        <div class="comp-analogy">Like having two shortcuts: one that remembers your exact question, and one that remembers the instructions you gave the assistant — so neither needs to be re-read every time.</div>
+        <div class="comp-tech">Tech: SHA-256 · TTL dict · Anthropic prompt-caching-2024-07-31 beta</div>
+        <div class="comp-chips" style="margin-top:8px;">
+          <span class="chip in">IN: question + domains</span>
+          <span class="chip out">OUT: cached answer (marked cached: true)</span>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -1055,8 +1168,11 @@
           <li><span class="what">Genetic risks, Pharmacogenes</span><span class="why">linked to conditions + medications</span></li>
           <li><span class="what">Mood, Sleep, Workouts</span><span class="why">cross-linked to each other</span></li>
           <li><span class="what">WhoopRecovery, WhoopCycle nodes</span><span class="why">live biometrics synced from device</span></li>
+          <li><span class="what">FinancialAccount, Investment, InsurancePlan, Debt</span><span class="why">finances domain nodes</span></li>
+          <li><span class="what">Job, Skill, Education, Certification</span><span class="why">career domain nodes</span></li>
+          <li><span class="what">CalendarEvent nodes</span><span class="why">Google Calendar sync</span></li>
           <li><span class="what">Drug-drug, supplement-drug edges</span><span class="why">safety-critical relationships</span></li>
-          <li><span class="what">Domain + Vertical registry nodes</span><span class="why">self-describing graph</span></li>
+          <li><span class="what">Domain + Vertical registry nodes</span><span class="why">self-describing graph (30+ node types)</span></li>
         </ul>
         <div style="margin-top:12px;font-size:12px;color:#5b21b6;">Port 7687 (Bolt) · 7474 (Browser) · Docker</div>
       </div>
@@ -1078,13 +1194,17 @@
         <div class="plain">"Your original documents, untouched, in organized folders — they never move off your disk."</div>
         <ul class="storage-items" style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
           <li><span class="what">data/uploads/healthcare/medical/</span><span class="why">PDFs, images, XML</span></li>
-          <li><span class="what">data/uploads/healthcare/fitness/</span><span class="why">CSVs, Apple Health exports</span></li>
+          <li><span class="what">data/uploads/healthcare/fitness/</span><span class="why">CSVs, Apple Health export.xml</span></li>
           <li><span class="what">data/uploads/healthcare/mental_health/</span><span class="why">therapy notes, journals</span></li>
           <li><span class="what">data/uploads/healthcare/genetics/</span><span class="why">23andMe reports, PDFs</span></li>
+          <li><span class="what">data/uploads/finances/{banking,investments…}/</span><span class="why">statements, tax docs</span></li>
+          <li><span class="what">data/uploads/career/{employment-history…}/</span><span class="why">resumes, offer letters</span></li>
           <li><span class="what">data/backups/</span><span class="why">AES-256 encrypted archives</span></li>
           <li><span class="what">data/neo4j/ + data/chroma_db/</span><span class="why">database files (gitignored)</span></li>
           <li><span class="what">.whoop_tokens.json</span><span class="why">OAuth2 tokens, chmod 600, gitignored</span></li>
+          <li><span class="what">.gcal_tokens.json</span><span class="why">Google Calendar OAuth2 tokens, gitignored</span></li>
           <li><span class="what">.whoop_sync_state.json</span><span class="why">last sync timestamp + counts</span></li>
+          <li><span class="what">credentials.json</span><span class="why">Google Cloud OAuth2 app credentials</span></li>
         </ul>
       </div>
 
@@ -1130,22 +1250,30 @@
     <div class="section-label">Section H</div>
     <h2>Cross-Domain Magic — The Real Value</h2>
     <p style="color:var(--muted);margin-bottom:8px;">These are the questions that make this system unique. No single-domain app can answer them.</p>
-    <p style="color:var(--muted);margin-bottom:24px;">The first three require the finances and legal domains (planned). The healthcare queries work today.</p>
+    <p style="color:var(--muted);margin-bottom:24px;">Healthcare, Finances, and Career are all active — cross-domain queries across those three work today. Legal contracts are planned.</p>
 
     <div class="query-cards">
-      <div class="query-card">
-        <div class="query-q">Given my diabetes diagnosis and my health insurance claims, am I maximizing my FSA/HSA benefits?</div>
+      <div class="query-card" style="background:var(--green-light);border-color:#a7f3d0;">
+        <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:6px;">✅ WORKS TODAY</div>
+        <div class="query-q">Given my diabetes diagnosis and my health insurance plan, am I maximizing my FSA/HSA benefits?</div>
         <div class="query-domains">
-          <span class="qdomain hc">Healthcare: Type 2 Diabetes condition</span>
+          <span class="qdomain hc">Healthcare: Condition(Type 2 Diabetes)</span>
           <span class="qdomain fi">Finances: InsurancePlan + Benefit(HSA)</span>
-          <span class="qdomain fi">Finances: Expense(is_medical)</span>
         </div>
       </div>
-      <div class="query-card">
+      <div class="query-card" style="background:var(--green-light);border-color:#a7f3d0;">
+        <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:6px;">✅ WORKS TODAY</div>
         <div class="query-q">Does my life insurance policy account for my BRCA2 screening needs?</div>
         <div class="query-domains">
           <span class="qdomain hc">Healthcare: GeneticRisk(BRCA2, high)</span>
           <span class="qdomain fi">Finances: InsurancePlan(type:life)</span>
+        </div>
+      </div>
+      <div class="query-card" style="background:var(--green-light);border-color:#a7f3d0;">
+        <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:6px;">✅ WORKS TODAY</div>
+        <div class="query-q">Am I due for any certifications that my employer might cover, based on my current role and skill gaps?</div>
+        <div class="query-domains">
+          <span class="qdomain hc" style="background:var(--purple-light);border-color:#ddd6fe;color:#5b21b6;">Career: Job(current) + Skill + Certification</span>
         </div>
       </div>
       <div class="query-card">
@@ -1236,6 +1364,21 @@
         <p>A naive approach would concatenate prior Q&amp;A into the system prompt. Instead, prior turns are passed as actual <code>{"role": "user"}</code> / <code>{"role": "assistant"}</code> messages in the Anthropic messages array. This lets the model use its <strong>native multi-turn reasoning</strong> — it knows the difference between what it said and what you said, and can refer back naturally. History is capped at 10 messages to keep token usage bounded.</p>
       </div>
 
+      <div class="decision green">
+        <h4>Two-layer caching: semantic TTL cache + Anthropic prompt caching</h4>
+        <p>A <strong>SHA-256 in-memory semantic cache</strong> with configurable TTL (default 5 min) avoids calling Claude for identical questions. Conversation-history queries bypass it — they're context-dependent by definition. Simultaneously, <strong>Anthropic prompt caching</strong> (<code>cache_control: ephemeral</code> on the system block + <code>anthropic-beta: prompt-caching-2024-07-31</code> header) caches the ~2 KB system prompt across calls, saving ~80% of system-prompt tokens on cache hits.</p>
+      </div>
+
+      <div class="decision" style="border-left-color:#64748b;">
+        <h4>Async-safe Neo4j: blocking driver wrapped in run_in_executor</h4>
+        <p>The official Neo4j Python driver is synchronous. FastAPI's async request handlers would block the event loop if Neo4j queries ran directly. Every Neo4j call is wrapped with <code>asyncio.get_event_loop().run_in_executor(None, lambda: …)</code> via a <code>_run_sync()</code> helper. This keeps the API fully async without replacing the Neo4j driver or using experimental async alternatives.</p>
+      </div>
+
+      <div class="decision orange">
+        <h4>SSE streaming (POST /query/stream) uses the Anthropic messages.stream() context manager</h4>
+        <p>The streaming endpoint uses <code>client.messages.stream()</code> as a context manager, iterating <code>text_stream</code> and yielding <code>data: &lt;chunk&gt;\n\n</code> SSE events via FastAPI's <code>StreamingResponse</code>. The UI consumes it with <code>response.body.getReader()</code> + <code>TextDecoder</code>, appending tokens character-by-character with a blinking cursor. Streaming bypasses the semantic cache (since partial answers shouldn't be cached) but still benefits from Anthropic prompt caching.</p>
+      </div>
+
     </div>
   </section>
 
@@ -1313,6 +1456,26 @@
       <div class="gloss-item">
         <div class="gloss-term">OAuth2 PKCE</div>
         <div class="gloss-def">A secure authorization flow for apps that can't keep secrets (like mobile apps). The Whoop integration uses a local HTTP server on port 8080 to capture the authorization code, then exchanges it for access + refresh tokens.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">SSE (Server-Sent Events)</div>
+        <div class="gloss-def">A protocol where the server streams data to the browser over a single HTTP connection. Used by POST /query/stream to send Claude's answer token-by-token, so you see words appearing in real time instead of waiting for the full answer.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">MCP (Model Context Protocol)</div>
+        <div class="gloss-def">A JSON-RPC 2.0 protocol over stdin/stdout that lets AI assistants like Claude Desktop call external tools. The mcp_server.py implements this so Claude Desktop can query your life-intelligence graph directly as "tools".</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Prompt Caching</div>
+        <div class="gloss-def">An Anthropic API feature (beta) that caches the system prompt on Anthropic's servers between calls. When the same system block is sent again within the TTL, Anthropic skips re-processing it — saving ~80% of system-prompt tokens per request.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Semantic Cache</div>
+        <div class="gloss-def">An in-memory dictionary keyed by a SHA-256 hash of the question + domains. If the exact same question is asked again within the TTL, the cached answer is returned immediately without calling Claude. Disabled when conversation history is active.</div>
+      </div>
+      <div class="gloss-item">
+        <div class="gloss-term">Apple Health Export</div>
+        <div class="gloss-def">An XML file exported from the iPhone Health app containing years of health data — steps, heart rate, sleep, workouts, glucose, weight, and more. The system parses it with stdlib only (xml.etree.ElementTree) and maps it to the same node types used by Whoop and other sources.</div>
       </div>
     </div>
   </section>
